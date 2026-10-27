@@ -1,0 +1,161 @@
+Create a premium-quality, emotionally expressive 2D cartoon brain mascot character sheet for a professional Android digital wellbeing app named "BrainBuddy".
+
+## MAIN CONCEPT
+
+Design ONE adorable, living pink brain character that gradually becomes physically and emotionally exhausted from excessive short-video scrolling.
+
+The character should initially look happy, energetic, lovable, and full of life.
+
+As the user watches more Reels, Shorts, and TikToks, the SAME character gradually becomes tired, weak, pale, distressed, and nearly unable to stand.
+
+The design should make users emotionally connect with their little brain and feel motivated to take a break.
+
+## CHARACTER DESIGN
+
+- Beautiful soft pink cartoon brain
+- Expressive eyes with detailed pupils
+- Natural eyebrows and small expressive mouth
+- Tiny rounded arms and legs
+- Soft, realistic-inspired brain folds
+- Rounded organic silhouette
+- Professional 2D illustrated mascot
+- Soft gradients and gentle shading
+- Subtle highlights and depth
+- Mature, emotional cartoon style
+- Visually attractive and memorable
+- Premium mobile application illustration quality
+
+IMPORTANT: Keep the cartoon style. Do NOT create a realistic anatomical brain.
+
+## FOUR PROGRESSIVE POSES OF ONE CHARACTER
+
+**POSE 1 — HAPPY AND ENERGETIC (0–24 Reels)**
+
+- Bright healthy-looking pink brain
+- Large sparkling eyes
+- Genuine joyful smile
+- Standing upright confidently
+- Arms slightly raised
+- Energetic posture
+- Cheerful and lovable expression
+
+**POSE 2 — STARTING TO FEEL TIRED (25–49 Reels)**
+
+- EXACT SAME character
+- Eyes slightly heavy and sleepy
+- Smile beginning to disappear
+- Slightly lowered eyebrows
+- Arms hanging lower
+- Slightly drooping posture
+- Slightly faded pink color
+- Subtle emotional fatigue
+
+**POSE 3 — VERY WEAK AND EXHAUSTED (50–99 Reels)**
+
+- EXACT SAME character
+- Noticeable dark circles under eyes
+- Heavy eyelids
+- Sad, exhausted expression
+- Slightly lowered head
+- Arms hanging weakly
+- Slouched body posture
+- Pale pink-purple skin tone
+- Small sweat drop
+- Visibly struggling to remain energetic
+
+**POSE 4 — EXTREMELY EXHAUSTED (100+ Reels)**
+
+- EXACT SAME character
+- STILL STANDING, but with great difficulty
+- Head lowered significantly
+- Eyes almost closed
+- Pronounced tired dark circles
+- Very weak and emotionally drained expression
+- Tiny mouth showing exhaustion
+- Both arms hanging loosely
+- Slightly trembling legs
+- Deeply slouched posture
+- Dull pale pink-purple body
+- Looks like it desperately needs rest
+- Emotionally impactful and sympathetic
+
+CRITICAL: The brain must NOT collapse onto the floor.
+
+The final pose should look vulnerable, tired, and emotionally moving rather than funny.
+
+## CHARACTER CONSISTENCY
+
+All four poses MUST depict the EXACT SAME brain character.
+
+Preserve:
+- Identical underlying brain silhouette
+- Identical brain fold patterns
+- Same eyes and facial anatomy
+- Same arm and leg design
+- Same proportions
+- Same illustration style
+- Same viewing angle
+- Same character identity
+
+The character is progressively changing its emotional and physical appearance, NOT transforming into another character.
+
+## ANIMATION-READY DESIGN
+
+Design the mascot so an Android developer can animate:
+
+- Natural blinking
+- Opening and closing eyelids
+- Subtle breathing
+- Slight body bobbing
+- Gradually lowering arms
+- Changing facial expressions
+- Slowly drooping posture
+- Subtle exhausted trembling
+- Smooth gradual color transitions
+
+Keep all body parts clearly distinguishable for potential animation rigging.
+
+## STRICTLY AVOID
+
+- Overly childish kawaii style
+- Silly comedy faces
+- Tongue sticking out
+- Exaggerated funny expressions
+- Different brain characters
+- Skeletons or skulls
+- Horror, blood or gore
+- Realistic medical brain anatomy
+- Overcomplicated visual effects
+- Text or typography
+- Background scenery
+- UI mockups
+
+## IMAGE OUTPUT REQUIREMENTS
+
+- Four poses arranged horizontally
+- ONE consistent character throughout
+- Same scale and camera angle
+- Front-facing three-quarter perspective
+- Full body visible in every pose
+- Generous spacing between poses
+- No overlapping poses
+- Transparent PNG background
+- High resolution, preferably 4096 × 1024 or larger
+- Sharp, clean edges
+- Easy to crop into separate transparent assets
+- Readable facial expressions even at small mobile overlay sizes
+- Professional production-ready character sheet
+
+## FINAL ART DIRECTION
+
+A polished, emotionally expressive 2D cartoon mascot for a premium Android wellbeing application.
+
+The same lovable pink brain slowly loses its energy and becomes visibly weaker with excessive scrolling.
+
+The first pose should make users love the character.
+
+The final pose should make users feel concerned for the same character and want to give it a break.
+
+Beautiful, consistent, emotionally powerful, animation-friendly, minimal, and professional.
+
+The visual changes symbolize scrolling fatigue and must not imply clinically measured brain damage.

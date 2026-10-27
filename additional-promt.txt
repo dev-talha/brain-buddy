@@ -1,0 +1,149 @@
+
+BRAINBUDDY — FINAL BREAK REMINDER & MASCOT RECOVERY RULES
+
+Add these exact requirements to the existing BrainBuddy Master Prompt.
+
+1. Break Reminder
+
+When the user continuously watches short-form videos for 20 minutes, show one small, elegant, nonintrusive reminder:
+
+"You've been scrolling for a while. Your little brain needs a break."
+
+Requirements:
+
+The reminder must be optional.
+
+Default reminder threshold: 20 minutes of continuous short-video watching.
+
+Allow the user to configure or disable reminders.
+
+Never show repeated reminders continuously.
+
+Use a minimum 30-minute reminder cooldown.
+
+Do not block or interrupt the video.
+
+Avoid notification spam.
+
+Do not request notification permission solely for an in-app overlay reminder.
+
+2. Brain Fatigue and Recovery
+
+The Brain mascot must not remain exhausted forever.
+
+Implement a continuous scrolling-fatigue score from 0 to 100.
+
+Fatigue increases as the user watches short videos and decreases when the user takes a break.
+
+Example:
+
+Each reliably detected new Reel adds 1 fatigue point.
+
+The score is capped at 100.
+
+Where individual Reel counting is unreliable, use a separately documented watch-time-based fatigue calculation.
+
+Do not count both the same Reel and its watch time as duplicate fatigue contributions.
+
+Recovery rules:
+
+During the first 5 minutes away from short-form video feeds, do not reduce fatigue.
+
+After those 5 minutes, reduce fatigue by 1 point per additional minute.
+
+Minimum fatigue score: 0.
+
+Calculate recovery using elapsed timestamps, not a continuously running background timer.
+
+Example:
+
+User watches 100 Reels:
+Fatigue = 100
+Mascot = Extremely Exhausted
+
+User takes a 20-minute break:
+Fatigue = 85
+Mascot = Still Weak, but Recovering
+
+User takes a total 60-minute break:
+Fatigue = 45
+Mascot = Feeling Better
+
+User takes a total 120-minute break:
+Fatigue = 0
+Mascot = Fresh Again
+
+When the user returns to short videos, continue increasing fatigue from the recovered score.
+
+3. Separate Reel Counter From Brain Fatigue
+
+The following are different values:
+
+A. Today's Reel Count
+B. Today's Watch Time
+C. Current Session Count
+D. Current Brain Fatigue Score
+
+Do NOT reset the daily reel count simply because the user takes a break.
+
+Example:
+
+User watches 100 Reels.
+
+Today's count = 100.
+
+Brain fatigue = 100.
+
+User takes a 20-minute break.
+
+Today's count remains 100.
+
+Brain fatigue becomes 85.
+
+User watches 10 more reliably detected Reels.
+
+Today's count becomes 110.
+
+Brain fatigue becomes 95.
+
+The daily counter resets at local midnight, but the brain fatigue score must be handled separately.
+
+Do not instantly restore the mascot to full health at midnight. Use timestamp-based recovery instead.
+
+4. Visual Recovery Animation
+
+During recovery, the SAME cartoon Brain gradually improves:
+
+Heavy eyelids begin opening.
+
+Dark circles become less prominent.
+
+Body trembling decreases.
+
+Head slowly lifts.
+
+Arms regain energy.
+
+Pink color becomes brighter.
+
+Breathing becomes more natural.
+
+Small smile gradually returns.
+
+The brain must not suddenly switch to a different character.
+
+Use smooth visual interpolation and lightweight animation.
+
+Calculate the correct recovered appearance when the user opens the app or returns to short-video feeds.
+
+Do not run permanent background animation or recovery timers.
+
+5. Transparency
+
+The recovery score is a motivational, fictional digital wellbeing indicator.
+
+Never present it as real neurological damage or medically measured brain recovery.
+
+Keep the implementation minimal, battery-efficient, fully offline, and consistent with the existing BrainBuddy architecture.
+
+Implement this behavior, add unit tests for recovery calculations and session transitions, and include the changes in the existing GitHub build workflow.
