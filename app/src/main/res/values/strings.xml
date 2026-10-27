@@ -16,8 +16,8 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 <resources>
-    <string name="app_name">Scrolless</string>
-    <string name="accessibility_service_description">This service detects when Reels, Shorts, TikTok, and Facebook Reels are opened so that Scrolless can block them if configured.</string>
+    <string name="app_name">BrainBuddy</string>
+    <string name="accessibility_service_description">BrainBuddy monitors short-video scrolling (Reels, Shorts, TikTok) to protect your brain fatigue, trigger mindful break reminders, and enforce your custom blocking limits.</string>
     <string name="timer_default_value" translatable="false">00:00</string>
     <string name="tiktok_blocked_title">TikTok videos are blocked</string>
     <string name="tiktok_blocked_description">Use the tabs below to open Inbox or Profile.</string>

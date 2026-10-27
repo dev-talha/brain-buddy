@@ -22,11 +22,13 @@ import androidx.lifecycle.viewModelScope
 import com.scrolless.app.core.model.BlockOption
 import com.scrolless.app.core.model.BlockingConfig
 import com.scrolless.app.core.model.BlockingSettings
+import com.scrolless.app.core.model.BrainFatigueState
 import com.scrolless.app.core.model.IntervalUsage
 import com.scrolless.app.core.model.SessionSegment
 import com.scrolless.app.core.model.usage.DailyUsageTotal
 import com.scrolless.app.core.model.usage.calculateWeekdayAverages
 import com.scrolless.app.core.repository.BlockingConfigRepository
+import com.scrolless.app.core.repository.BrainFatigueRepository
 import com.scrolless.app.core.repository.SessionSegmentStore
 import com.scrolless.app.core.repository.UserSettingsStore
 import com.scrolless.app.core.util.combine
@@ -64,6 +66,7 @@ class HomeViewModel @Inject constructor(
     private val userSettingsStore: UserSettingsStore,
     private val blockingConfigRepository: BlockingConfigRepository,
     private val sessionSegmentStore: SessionSegmentStore,
+    private val brainFatigueRepository: BrainFatigueRepository,
 ) : ViewModel() {
 
     private val _selectedAveragePeriod = MutableStateFlow(UsageAveragePeriod.LAST_WEEK)
@@ -106,6 +109,7 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
+        brainFatigueRepository.refreshRecovery()
         viewModelScope.launch {
             currentDate.collect { today ->
                 if (selectedAnalyticsDate.value.isAfter(today)) {
@@ -184,6 +188,7 @@ class HomeViewModel @Inject constructor(
         userSettingsStore.getPauseDuration(),
         analyticsSnapshot,
         _selectedAveragePeriod,
+        brainFatigueRepository.fatigueState,
     ) {
             usage,
             pauseUntil,
@@ -192,6 +197,7 @@ class HomeViewModel @Inject constructor(
             pauseDuration,
             analytics,
             averagePeriod,
+            brainFatigue,
         ->
 
         val progress = calculateProgress(
@@ -215,6 +221,7 @@ class HomeViewModel @Inject constructor(
             listSessionSegments = usage.sessionSegment,
             usageAnalytics = analytics,
             averagePeriod = averagePeriod,
+            brainFatigue = brainFatigue,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -422,6 +429,7 @@ data class HomeUiState(
     val listSessionSegments: List<SessionSegment> = emptyList(),
     val usageAnalytics: UsageAnalyticsUiState = UsageAnalyticsUiState(),
     val averagePeriod: UsageAveragePeriod = UsageAveragePeriod.LAST_WEEK,
+    val brainFatigue: BrainFatigueState = BrainFatigueState(),
 )
 
 private fun buildUsageAnalyticsUiState(

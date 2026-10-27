@@ -33,10 +33,12 @@ import com.scrolless.app.core.model.BlockingResult
 import com.scrolless.app.core.model.ContentBlockAction
 import com.scrolless.app.core.model.ResolvedBlockableApp
 import com.scrolless.app.core.repository.BlockingConfigRepository
+import com.scrolless.app.core.repository.BrainFatigueRepository
 import com.scrolless.app.core.repository.SessionTracker
 import com.scrolless.app.core.repository.UserSettingsStore
 import com.scrolless.app.debug.DebugOverlayConfig
 import com.scrolless.app.ui.overlay.BlockedContentOverlayManager
+import com.scrolless.app.ui.overlay.BreakReminderOverlayManager
 import com.scrolless.app.ui.overlay.TimerOverlayManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -89,6 +91,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         super.onCreate()
         timerOverlayManager.attachServiceContext(this)
         blockedContentOverlayManager.attachServiceContext(this)
+        breakReminderOverlayManager.attachServiceContext(this)
 
         if (BuildConfig.DEBUG) {
             serviceScope.launch {
@@ -131,6 +134,14 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Manages the blocker overlay placed directly over distracting video players. */
     @Inject
     lateinit var blockedContentOverlayManager: BlockedContentOverlayManager
+
+    /** Manages the non-intrusive short-video break reminder overlay. */
+    @Inject
+    lateinit var breakReminderOverlayManager: BreakReminderOverlayManager
+
+    /** Manages brain fatigue, reel counting, and recovery state. */
+    @Inject
+    lateinit var brainFatigueRepository: BrainFatigueRepository
 
     private val powerManager by lazy { getSystemService(POWER_SERVICE) as PowerManager }
 
@@ -197,6 +208,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         val session = viewingSession ?: return@Runnable
         val elapsed = System.currentTimeMillis() - session.startedAtMillis
+
+        breakReminderOverlayManager.showIfEligible(elapsed)
+        brainFatigueRepository.onSessionActive(elapsed)
 
         if (isBlockingSuppressed) {
             // While paused or suppressed, continue scheduling so usage and timer overlay stay current.
@@ -472,6 +486,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         val session = viewingSession ?: return
         Timber.d("Entered blocked content at %d (app=%s, paused=%b)", session.startedAtMillis, session.app, isPauseActive())
 
+        brainFatigueRepository.onReelWatched(1)
+
         // Expand service scope to detect when user leaves the app (e.g. to launcher)
         refreshServiceConfig()
 
@@ -569,6 +585,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
             }
         }
         refreshServiceConfig()
+        breakReminderOverlayManager.dismiss()
+        brainFatigueRepository.onSessionEnded()
         if (finished == null) return // A covered player already finished its viewing session.
         timerOverlayManager.hide(finished.startedAtMillis, finished.endedAtMillis)
         serviceScope.launch { saveViewing(finished) }

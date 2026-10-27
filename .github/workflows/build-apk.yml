@@ -74,6 +74,9 @@ jobs:
             echo "No release keystore configured; building unsigned release or debug APK."
           fi
 
+      - name: Run Unit Tests
+        run: ./gradlew test
+
       - name: Build Debug APK
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'all' || inputs.build_type == 'debug' }}
         run: ./gradlew :app:assembleDebug
@@ -104,3 +107,4 @@ jobs:
           gh release create "$TAG_NAME" apks/*.apk \
             --title "BrainBuddy Build $TAG_NAME" \
             --notes "Automated APK build from GitHub Actions workflow."
+

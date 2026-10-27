@@ -40,10 +40,12 @@ import com.scrolless.app.core.data.database.ScrollessDatabase
 import com.scrolless.app.core.data.database.dao.SessionSegmentDao
 import com.scrolless.app.core.data.database.dao.UserSettingsDao
 import com.scrolless.app.core.data.repository.BlockingConfigRepositoryImpl
+import com.scrolless.app.core.data.repository.BrainFatigueRepositoryImpl
 import com.scrolless.app.core.data.repository.SessionSegmentStoreImpl
 import com.scrolless.app.core.data.repository.SessionTrackerImpl
 import com.scrolless.app.core.data.repository.UserSettingsStoreImpl
 import com.scrolless.app.core.repository.BlockingConfigRepository
+import com.scrolless.app.core.repository.BrainFatigueRepository
 import com.scrolless.app.core.repository.SessionSegmentStore
 import com.scrolless.app.core.repository.SessionTracker
 import com.scrolless.app.core.repository.UserSettingsStore
@@ -126,6 +128,16 @@ object DataDiModule {
     @Singleton
     fun provideSessionTracker(timeProvider: TimeProvider, sessionSegmentStore : SessionSegmentStore): SessionTracker = SessionTrackerImpl(
         sessionSegmentStore = sessionSegmentStore,
+        timeProvider = timeProvider,
+    )
+
+    @Provides
+    @Singleton
+    fun provideBrainFatigueRepository(
+        @ApplicationContext context: Context,
+        timeProvider: TimeProvider,
+    ): BrainFatigueRepository = BrainFatigueRepositoryImpl(
+        context = context,
         timeProvider = timeProvider,
     )
 

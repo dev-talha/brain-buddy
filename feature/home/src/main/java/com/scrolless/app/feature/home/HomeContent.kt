@@ -57,6 +57,7 @@ import com.scrolless.app.core.model.SessionSegment
 import com.scrolless.app.designsystem.component.staggeredEntrance
 import com.scrolless.app.designsystem.layout.ContentMaxWidth
 import com.scrolless.app.designsystem.theme.spacing
+import com.scrolless.app.feature.home.components.BrainMascotCard
 import com.scrolless.app.feature.home.components.InlineUsageAnalyticsPanel
 import com.scrolless.app.feature.home.components.TodayBlockingControls
 import com.scrolless.app.feature.home.components.WeekdayAverageSection
@@ -194,12 +195,19 @@ internal fun HomeContent(
                         onNavigateToSettings = onNavigateToSettings,
                     )
 
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    BrainMascotCard(
+                        fatigueState = uiState.brainFatigue,
+                        modifier = Modifier.staggeredEntrance(index = 1),
+                    )
+
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .staggeredEntrance(index = 1),
+                            .staggeredEntrance(index = 2),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         HomeControlsAndAnalytics(
@@ -289,6 +297,12 @@ private fun HomeWidePanes(
                 onUsageAnalyticsTodaySelected = onUsageAnalyticsTodaySelected,
                 onHelpClicked = onHelpClicked,
                 onNavigateToSettings = onNavigateToSettings,
+            )
+
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+            BrainMascotCard(
+                fatigueState = uiState.brainFatigue,
             )
             if (analyticsSelectedIsToday) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
