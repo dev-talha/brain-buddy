@@ -160,7 +160,14 @@ enum class BlockableApp(
             "com.google.android.apps.youtube.kids",
             "app.revanced.android.youtube",
         ),
-        detectionMethod = DetectionMethod.ViewId("reel_player_page_container"),
+        detectionMethod = DetectionMethod.AnyOf(
+            listOf(
+                DetectionMethod.ViewId("reel_player_page_container"),
+                DetectionMethod.ViewId("reel_player_view"),
+                DetectionMethod.ViewId("reel_recycler"),
+                DetectionMethod.ViewId("shorts_container"),
+            ),
+        ),
         blockAction = ContentBlockAction.PerformGlobalAction(GLOBAL_ACTION_BACK),
     ),
     TIKTOK(

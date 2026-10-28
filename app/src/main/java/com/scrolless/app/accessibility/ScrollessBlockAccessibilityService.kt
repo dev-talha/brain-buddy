@@ -178,6 +178,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Whether videos received in direct messages are exempt from blocking. */
     private var currentAllowVideosSentByDm: Boolean = false
 
+    private var lastScrollEventTimeMs: Long = 0L
+
     /** Timestamp until which blocking is temporarily paused. */
     @Volatile
     private var pauseUntilMillis: Long = 0L
@@ -382,6 +384,16 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
             currentActivity = event.packageName?.let { ComponentName(it.toString(), className) }
         }
 
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            val now = System.currentTimeMillis()
+            if (contentSession != null && now - lastScrollEventTimeMs > 900L) {
+                lastScrollEventTimeMs = now
+                Timber.d("Reel scroll detected via accessibility event! Incrementing reel count.")
+                brainFatigueRepository.onReelWatched(1)
+                timerOverlayManager.notifyReelScrolled()
+            }
+        }
+
         val scan = contentScanner.scan(
             event.packageName?.toString(),
             event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED,
@@ -440,6 +452,21 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Called when the accessibility service is interrupted by the system. */
     override fun onInterrupt() = Unit
 
+    /**
+     * Called when the user taps the system-provided accessibility floating button on the screen edge.
+     * Launches the main BrainBuddy dashboard immediately.
+     */
+    override fun onAccessibilityButtonClicked() {
+        super.onAccessibilityButtonClicked()
+        Timber.i("Accessibility shortcut floating button tapped by user - launching BrainBuddy")
+        val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        if (intent != null) {
+            startActivity(intent)
+        }
+    }
+
     /** Cleans up overlays, cancels handlers, and stops all background jobs when the service is destroyed. */
     override fun onDestroy() {
         super.onDestroy()
@@ -487,6 +514,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         Timber.d("Entered blocked content at %d (app=%s, paused=%b)", session.startedAtMillis, session.app, isPauseActive())
 
         brainFatigueRepository.onReelWatched(1)
+        timerOverlayManager.notifyReelScrolled()
 
         // Expand service scope to detect when user leaves the app (e.g. to launcher)
         refreshServiceConfig()
