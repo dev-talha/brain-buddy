@@ -22,3 +22,4 @@ data class BreakReminderConfig(
         const val REMINDER_TEXT = "You've been scrolling for a while. Your little brain needs a break."
     }
 }
+

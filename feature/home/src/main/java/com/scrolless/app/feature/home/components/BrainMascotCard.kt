@@ -6,6 +6,11 @@
 package com.scrolless.app.feature.home.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,10 +33,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,14 +70,22 @@ fun BrainMascotCard(
             "Your brain is getting slightly exhausted.",
             Color(0xFFFFB300),
         )
-        MascotPose.EXHAUSTED -> Triple(
-            "Very Exhausted! 😴",
-            "Too much scrolling. Consider taking a walk or break.",
-            Color(0xFFFF7043),
-        )
+        MascotPose.EXHAUSTED -> if (fatigue >= 80) {
+            Triple(
+                "Brain is Trembling with Fatigue! ⚠️",
+                "Severe cognitive exhaustion. Step away from the screen!",
+                Color(0xFFFF5722),
+            )
+        } else {
+            Triple(
+                "Very Exhausted! 😴",
+                "Too much scrolling. Consider taking a walk or break.",
+                Color(0xFFFF7043),
+            )
+        }
         MascotPose.DEPLETED -> Triple(
-            "Critically Drained! 🛑",
-            "Your little brain desperately needs rest.",
+            "Critically Shaking & Drained! 🛑",
+            "Your little brain is in severe distress and desperately needs rest.",
             Color(0xFFE53935),
         )
     }
@@ -78,6 +95,40 @@ fun BrainMascotCard(
         MascotPose.TIRED -> DesignR.drawable.brain_mascot_tired
         MascotPose.EXHAUSTED -> DesignR.drawable.brain_mascot_exhausted
         MascotPose.DEPLETED -> DesignR.drawable.brain_mascot_depleted
+    }
+
+    // Dynamic trembling/shivering animation when brain is in severe distress (fatigue >= 80)
+    val isShaking = fatigue >= 80
+    val infiniteTransition = rememberInfiniteTransition(label = "MascotShakingTransition")
+
+    val shakeOffset by if (isShaking) {
+        val intensity = if (fatigue >= 95) 3.5f else 2.0f
+        infiniteTransition.animateFloat(
+            initialValue = -intensity,
+            targetValue = intensity,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 65, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "ShakeOffset",
+        )
+    } else {
+        remember { mutableFloatStateOf(0f) }
+    }
+
+    val shakeRotation by if (isShaking) {
+        val rotIntensity = if (fatigue >= 95) 1.8f else 1.0f
+        infiniteTransition.animateFloat(
+            initialValue = -rotIntensity,
+            targetValue = rotIntensity,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 80, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "ShakeRotation",
+        )
+    } else {
+        remember { mutableFloatStateOf(0f) }
     }
 
     Card(
@@ -112,7 +163,12 @@ fun BrainMascotCard(
                     Image(
                         painter = painterResource(id = drawableRes),
                         contentDescription = "BrainBuddy Mascot",
-                        modifier = Modifier.size(120.dp),
+                        modifier = Modifier
+                            .size(120.dp)
+                            .graphicsLayer {
+                                translationX = shakeOffset.dp.toPx()
+                                rotationZ = shakeRotation
+                            },
                     )
                 }
             }
@@ -237,3 +293,4 @@ private fun MetricChip(
         }
     }
 }
+

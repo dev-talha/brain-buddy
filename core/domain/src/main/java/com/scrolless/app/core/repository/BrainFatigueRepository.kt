@@ -33,6 +33,11 @@ interface BrainFatigueRepository {
     fun onSessionEnded()
 
     /**
+     * Records baseline device screen time outside short-video feeds.
+     */
+    fun onGeneralScreenTime(durationMs: Long)
+
+    /**
      * Evaluates timestamp-based recovery on app open or return to screen.
      */
     fun refreshRecovery()
@@ -52,3 +57,4 @@ interface BrainFatigueRepository {
      */
     fun canShowBreakReminder(currentSessionDurationMs: Long): Boolean
 }
+

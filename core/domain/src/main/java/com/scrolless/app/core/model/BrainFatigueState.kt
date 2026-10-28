@@ -58,3 +58,4 @@ data class BrainFatigueState(
     val healthPercentage: Int
         get() = (100 - fatigueScore).coerceIn(0, 100)
 }
+

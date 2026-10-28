@@ -32,13 +32,13 @@
 
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_blocking">Blocking</string>
-    <string name="settings_theme_description">Choose whether Scrolless follows your device theme.</string>
+    <string name="settings_theme_description">Choose whether BrainBuddy follows your device theme.</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_title">Theme</string>
     <string name="settings_material_you_description">Use colours taken from your wallpaper.</string>
-    <string name="settings_material_you_note">Turn this off to always use the Scrolless blue palette.</string>
+    <string name="settings_material_you_note">Turn this off to always use the BrainBuddy palette.</string>
     <string name="settings_material_you_title">Material You</string>
     <string name="settings_show_onscreen_timer_description">Keep a floating timer visible while watching short-form content.</string>
     <string name="settings_show_onscreen_timer_title">Show on-screen timer</string>

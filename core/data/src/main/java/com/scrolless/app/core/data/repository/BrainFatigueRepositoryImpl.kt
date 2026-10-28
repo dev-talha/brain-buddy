@@ -138,6 +138,16 @@ class BrainFatigueRepositoryImpl @Inject constructor(
         persistState(newState)
     }
 
+    override fun onGeneralScreenTime(durationMs: Long) {
+        val current = _fatigueState.value
+        val newFatigue = BrainFatigueCalculator.addGeneralScreenTimeFatigue(current.fatigueScore, durationMs)
+        if (newFatigue != current.fatigueScore) {
+            val newState = current.copy(fatigueScore = newFatigue)
+            _fatigueState.value = newState
+            persistState(newState)
+        }
+    }
+
     override fun refreshRecovery() {
         val now = timeProvider.currentTimeInMillis()
         val currentEpochDay = timeProvider.localDateNow().toEpochDay()
@@ -190,3 +200,4 @@ class BrainFatigueRepositoryImpl @Inject constructor(
             .apply()
     }
 }
+

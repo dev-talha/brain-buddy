@@ -193,4 +193,31 @@ class BrainFatigueCalculatorTest {
             ),
         )
     }
+
+    @Test
+    fun `general screen time produces gentle baseline fatigue at 1 pt per 5 minutes`() {
+        var fatigue = 10
+
+        // 4 minutes: not yet reached 5 min threshold -> 0 change
+        val fourMinutesMs = 4 * oneMinuteMs
+        fatigue = BrainFatigueCalculator.addGeneralScreenTimeFatigue(fatigue, fourMinutesMs)
+        assertEquals(10, fatigue)
+
+        // 15 minutes: 15 / 5 = 3 points added
+        val fifteenMinutesMs = 15 * oneMinuteMs
+        fatigue = BrainFatigueCalculator.addGeneralScreenTimeFatigue(fatigue, fifteenMinutesMs)
+        assertEquals(13, fatigue)
+    }
+
+    @Test
+    fun `mascot trembling is activated only when fatigue reaches 80 or higher`() {
+        assertFalse(BrainFatigueCalculator.shouldMascotTremble(0))
+        assertFalse(BrainFatigueCalculator.shouldMascotTremble(49))
+        assertFalse(BrainFatigueCalculator.shouldMascotTremble(79))
+
+        assertTrue(BrainFatigueCalculator.shouldMascotTremble(80))
+        assertTrue(BrainFatigueCalculator.shouldMascotTremble(95))
+        assertTrue(BrainFatigueCalculator.shouldMascotTremble(100))
+    }
 }
+

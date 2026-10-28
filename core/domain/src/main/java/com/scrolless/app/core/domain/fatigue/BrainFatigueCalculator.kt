@@ -20,6 +20,8 @@ object BrainFatigueCalculator {
     const val MIN_FATIGUE = 0
     const val RECOVERY_GRACE_PERIOD_MINUTES = 5L
     const val RECOVERY_RATE_PER_MINUTE = 1
+    const val GENERAL_SCREEN_TIME_MILLIS_PER_POINT = 5 * 60_000L // 5 minutes per 1 fatigue point
+    const val TREMBLING_FATIGUE_THRESHOLD = 80
 
     /**
      * Calculates the recovered fatigue score after being away from short-form feeds.
@@ -80,6 +82,26 @@ object BrainFatigueCalculator {
     }
 
     /**
+     * Calculates gentle baseline fatigue from general screen use outside of short-video feeds.
+     * Rate: 1 fatigue point per 5 minutes (300,000 ms) of continuous device usage.
+     * In comparison, short-form reels cause rapid dopamine fatigue (1 point per reel/30s).
+     */
+    fun addGeneralScreenTimeFatigue(
+        currentFatigue: Int,
+        generalScreenTimeMs: Long,
+    ): Int {
+        if (generalScreenTimeMs < GENERAL_SCREEN_TIME_MILLIS_PER_POINT) return currentFatigue
+        val points = (generalScreenTimeMs / GENERAL_SCREEN_TIME_MILLIS_PER_POINT).toInt()
+        return (currentFatigue + points).coerceIn(MIN_FATIGUE, MAX_FATIGUE)
+    }
+
+    /**
+     * Determines whether the mascot should enter the physical trembling / shivering state.
+     * Active when cognitive fatigue is in severe distress (>= 80).
+     */
+    fun shouldMascotTremble(fatigue: Int): Boolean = fatigue >= TREMBLING_FATIGUE_THRESHOLD
+
+    /**
      * Evaluates if a non-intrusive break reminder should be triggered.
      *
      * @param continuousSessionDurationMs Duration of current continuous short-video session in ms
@@ -130,3 +152,4 @@ object BrainFatigueCalculator {
         }
     }
 }
+

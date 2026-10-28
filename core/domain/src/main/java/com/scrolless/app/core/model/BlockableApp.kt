@@ -237,6 +237,17 @@ enum class BlockableApp(
         storiesDetectionMethod = DetectionMethod.ViewId("opera_viewer"),
         blockAction = ContentBlockAction.PerformGlobalAction(GLOBAL_ACTION_BACK),
     ),
+    LIKEE(
+        packageIds = listOf("video.like", "video.like.lite"),
+        detectionMethod = DetectionMethod.AnyOf(
+            listOf(
+                DetectionMethod.ViewId("player_view"),
+                DetectionMethod.ViewId("video_view"),
+                DetectionMethod.ViewId("texture_view"),
+            ),
+        ),
+        blockAction = ContentBlockAction.PerformGlobalAction(GLOBAL_ACTION_BACK),
+    ),
     ;
 
     fun getBlockAction(): ContentBlockAction = blockAction

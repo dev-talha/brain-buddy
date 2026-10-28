@@ -56,6 +56,8 @@
 
     <string name="app_tiktok_lite" translatable="false">TikTok Lite</string>
 
+    <string name="app_likee" translatable="false">Likee</string>
+
     <string name="block_all">Block\nAll</string>
 
     <string name="close">Close</string>
@@ -67,7 +69,7 @@
     <string name="get_started">Get Started</string>
 
 
-    <string name="github_url" translatable="false">https://github.com/Xeven777/Scrolless</string>
+    <string name="github_url" translatable="false">https://github.com/dev-talha/brain-buddy</string>
 
 
     <string name="go_to_accessibility_settings">Go to Accessibility Settings</string>
@@ -76,13 +78,13 @@
     <string name="help">Help</string>
 
 
-    <string name="help_dialog_title">Scrolless not working?</string>
+    <string name="help_dialog_title">BrainBuddy not working?</string>
 
     <string name="help_step1_description">Select one of the blocking options from the main screen</string>
 
     <string name="help_step1_title">Choose Your Block Option</string>
 
-    <string name="help_step2_description">If blocking isn\'t working, disable and then enable the accessibility service and try to disable battery optimization for Scrolless.</string>
+    <string name="help_step2_description">If blocking isn\'t working, disable and then enable the accessibility service and try to disable battery optimization for BrainBuddy.</string>
 
     <string name="help_step2_title">Troubleshooting</string>
 
@@ -130,7 +132,7 @@
 
     <string name="interval_timer_dialog_allowance_label">Allowed watch time</string>
 
-    <string name="interval_timer_dialog_break_description">Scrolless keeps supported apps blocked for this long before the next break.</string>
+    <string name="interval_timer_dialog_break_description">BrainBuddy keeps supported apps blocked for this long before the next break.</string>
 
     <string name="interval_timer_dialog_break_label">Break duration</string>
 

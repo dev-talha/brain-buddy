@@ -82,6 +82,7 @@ import com.scrolless.app.designsystem.theme.facebookLiteColor
 import com.scrolless.app.designsystem.theme.indicatorColor
 import com.scrolless.app.designsystem.theme.indicatorContainerColor
 import com.scrolless.app.designsystem.theme.instagramReelsColor
+import com.scrolless.app.designsystem.theme.likeeColor
 import com.scrolless.app.designsystem.theme.snapchatColor
 import com.scrolless.app.designsystem.theme.spacing
 import com.scrolless.app.designsystem.theme.tiktokColor
@@ -485,6 +486,7 @@ fun BlockableApp.displayName(context: Context): String = context.getString(
         BlockableApp.SHORTS -> R.string.app_shorts
         BlockableApp.TIKTOK -> R.string.app_tiktok
         BlockableApp.TIKTOK_LITE -> R.string.app_tiktok_lite
+        BlockableApp.LIKEE -> R.string.app_likee
     },
 )
 
@@ -499,6 +501,7 @@ fun BlockableApp.analyticsColor(): Color = when (this) {
     BlockableApp.SHORTS -> youtubeShortsColor
     BlockableApp.TIKTOK -> tiktokColor
     BlockableApp.TIKTOK_LITE -> tiktokLiteColor
+    BlockableApp.LIKEE -> likeeColor
 }
 
 // --- Analytics previews ---

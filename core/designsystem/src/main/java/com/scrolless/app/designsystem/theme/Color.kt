@@ -246,6 +246,7 @@ val snapchatColor = Color(0xFFFFFC00) // Snapchat yellow
 val tiktokColor = Color(0xFF00F2EA) // Cyan/aqua
 val tiktokLiteColor = Color(0xFF7BF5F0) // Light cyan
 val youtubeShortsColor = Color(0xFFFFB300) // Amber
+val likeeColor = Color(0xFFFF2D55) // Likee vibrant pink-red
 
 val timerOverlayBackgroundColor = Color(0xB3000000) // ~70% alpha black
 
