@@ -16,10 +16,13 @@
  */
 package com.scrolless.app.accessibility
 
+import android.accessibilityservice.AccessibilityButtonController
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -259,6 +262,26 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         // Start with restricted configuration to save battery
         refreshServiceConfig()
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                accessibilityButtonController.registerAccessibilityButtonCallback(
+                    object : AccessibilityButtonController.AccessibilityButtonCallback() {
+                        override fun onClicked(controller: AccessibilityButtonController) {
+                            Timber.i("Accessibility shortcut floating button tapped - launching BrainBuddy")
+                            val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            }
+                            if (intent != null) {
+                                startActivity(intent)
+                            }
+                        }
+                    },
+                )
+            } catch (e: Exception) {
+                Timber.w(e, "Could not register accessibility button callback")
+            }
+        }
+
         // The user may have just enabled accessibility in Android Settings; bring them back once.
         serviceScope.launch {
             val waitingForAccessibility = userSettingsStore.getWaitingForAccessibility().distinctUntilChanged()
@@ -451,21 +474,6 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     /** Called when the accessibility service is interrupted by the system. */
     override fun onInterrupt() = Unit
-
-    /**
-     * Called when the user taps the system-provided accessibility floating button on the screen edge.
-     * Launches the main BrainBuddy dashboard immediately.
-     */
-    override fun onAccessibilityButtonClicked() {
-        super.onAccessibilityButtonClicked()
-        Timber.i("Accessibility shortcut floating button tapped by user - launching BrainBuddy")
-        val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-        if (intent != null) {
-            startActivity(intent)
-        }
-    }
 
     /** Cleans up overlays, cancels handlers, and stops all background jobs when the service is destroyed. */
     override fun onDestroy() {
