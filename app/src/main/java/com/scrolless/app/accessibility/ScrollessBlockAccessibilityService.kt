@@ -173,7 +173,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         get() = contentSession?.takeUnless { it.isCovered }
 
     /** Whether the user enabled the floating timer overlay in settings. */
-    private var currentTimerOverlayEnabled: Boolean = false
+    private var currentTimerOverlayEnabled: Boolean = true
 
     /** Whether Stories participate in usage tracking and blocking. */
     private var currentIncludeStories: Boolean = false
@@ -548,12 +548,12 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
                 blockedContentOverlayManager.hide()
             }
 
-            if (currentTimerOverlayEnabled) {
-                // The saved timer preference may have finished loading during the blocking check.
-                val config = if (timerConfig != null) timerConfig.await() else loadTimerConfig()
-                if (config != null) {
-                    showTimerOverlayIfEnabled(session, config, dailyUsageMillis)
-                }
+            // Always show the dynamic notch mascot pill when viewing short videos!
+            val config = if (timerConfig != null) timerConfig.await() else loadTimerConfig()
+            if (config != null) {
+                showTimerOverlayIfEnabled(session, config, dailyUsageMillis)
+            } else {
+                timerOverlayManager.showDaily(session.startedAtMillis, dailyUsageMillis)
             }
 
             if (isBlockingSuppressed) {
@@ -581,9 +581,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Shows the timer using the settings and usage already loaded for this viewing session. */
     private fun showTimerOverlayIfEnabled(session: ContentSession, config: BlockingConfig, dailyUsageMillis: Long) {
         // Reads can finish after navigation. Only show the timer for the same viewing session.
-        if (!currentTimerOverlayEnabled || viewingSession !== session) return
+        if (viewingSession !== session) return
 
-        Timber.v("Showing timer overlay")
+        Timber.v("Showing Dynamic Notch Pill overlay")
         // This coroutine already runs on the main thread, so no Handler post is needed.
         if (config.activeOption == BlockOption.IntervalTimer) {
             timerOverlayManager.showInterval(

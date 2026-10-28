@@ -193,8 +193,6 @@ class TimerOverlayManager @Inject constructor(
         }
 
         // Get saved position or default to top-center under camera
-        val savedX = userSettingsStore.getTimerOverlayPositionX().value
-        val savedY = userSettingsStore.getTimerOverlayPositionY().value
         val defaultY = dpToPx(12f) // Under camera punch-hole
 
         layoutParams = WindowManager.LayoutParams(
@@ -205,14 +203,14 @@ class TimerOverlayManager @Inject constructor(
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            x = savedX
-            y = if (savedY <= 0) defaultY else savedY
+            x = 0 // Centered directly under the front punch-hole camera
+            y = defaultY
         }
 
         screenBounds = calculateScreenBounds()
 
         try {
-            rootView?.alpha = 0f
+            rootView?.alpha = 1f
             wm.addView(rootView, layoutParams)
 
             startTimer()
