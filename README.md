@@ -1,204 +1,178 @@
 <div align="center">
 
-<img src="art/app_logo.png" alt="Scrolless logo — open-source anti brain-rot app for Android" height="180">
+<img src="art/brain_mascot_energetic.png" alt="BrainBuddy Logo — Mindful Digital Wellbeing & Anti-Doomscrolling Mascot" height="180">
 
-# 🚫 Scrolless — Block Reels, Shorts &amp; TikTok
+# 🧠 BrainBuddy — Mindful Anti-Doomscrolling Companion
 
-### *The open-source anti brain-rot app for Android*
+### *An emotionally expressive, open-source Android digital wellbeing companion and short-video blocker*
 
-**Block Instagram Reels. Block YouTube Shorts. Block TikTok. Stop doomscrolling and get your attention back.**
+**Protect your brain from algorithmic burnout. Block Reels, Shorts, TikTok & Likee. Watch your brain recover as you take mindful breaks.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/Xeven777/Scrolless?style=for-the-badge&logo=github&label=Download&color=3F51B5)](https://github.com/Xeven777/Scrolless/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=for-the-badge&label=License&logo=gnu&logoColor=white&color=3F51B5)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-8.0%20%2B-blue.svg?style=for-the-badge&logo=android&logoColor=white&color=3F51B5)](#-download)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](#-contributing)
+[![GitHub Actions CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](#-building-and-ci)
 
 <br>
 
-[**⬇️ Download**](#-download) · [**✨ Features**](#-features) · [**🛠️ Build**](#-building-from-source) · [**❓ FAQ**](#-faq) · [**🤝 Contributing**](#-contributing) · [**📄 License**](#-license)
+[**⬇️ Download APK**](#-download) · [**✨ BrainBuddy Features**](#-brainbuddy-features) · [**🧬 How Fatigue Works**](#-how-brain-fatigue--recovery-works) · [**📱 Supported Platforms**](#-supported-platforms) · [**🤝 Credits & Fork**](#-credits--acknowledgements) · [**📄 License**](#-license)
 
 </div>
 
 ---
 
-## 🤔 Why Scrolless?
+## 🤔 Why BrainBuddy?
 
-You open Instagram to "quickly check a message"... and 40 minutes vanish into Reels. 😵‍💫
+You open Instagram or TikTok for *"just five minutes"*... and suddenly 45 minutes vanish into mindless scrolling. Your mind feels scattered, tired, and overstimulated. 😵‍💫
 
-**Scrolless** is a fully open-source Android **short-form video blocker** that detects and blocks "brain rot" content — *while you're scrolling it*. It uses Android's **Accessibility Service** to recognize **Instagram Reels**, **YouTube Shorts**, **TikTok**, **Facebook Reels**, **Snapchat Spotlight** and **YouTube Kids / ReVanced** the moment they appear, and gets you out before the doomscroll begins.
+Traditional app blockers either lock your entire phone or display annoying popups that you immediately dismiss. 
 
-> 🔐 **The accessibility permission can be abused — which is exactly why Scrolless is 100% open source.** Don't trust us, *read the code*. Every permission and every detection rule is here for you to audit.
+**BrainBuddy** takes an emotionally resonant, mindful approach:
+It pairs a **living, expressive cartoon Brain mascot** with powerful on-device short-form video blocking. As you scroll through Reels, Shorts, TikTok, or Likee, your little brain visually tires out. Take a break, and it gradually regains its energy, smiling and standing tall again.
 
-## 🧠 What is Scrolless?
+> 🔐 **Privacy First:** BrainBuddy is **100% open source** and operates **entirely offline**. It uses Android's Accessibility Service strictly for local video detection. There are no analytics, no accounts, no ads, and no data uploaded to any server.
 
-Scrolless is an **anti-doomscrolling** and **screen-time control** app for Android that targets *short-form feed content* specifically — Reels, Shorts, TikToks and Spotlight — instead of locking your whole phone. If you want to keep chatting on Instagram but stop losing hours to Reels, that is exactly the gap Scrolless fills.
+---
 
-It is an alternative to generic app blockers and digital-wellbeing timers that either block too much (a whole app) or too little (a nudge you can swipe away). Scrolless intervenes at the moment the feed appears.
+## ✨ BrainBuddy Features
 
-**Built for people who want to:** quit doomscrolling, reduce short-form video screen time, focus on study or work, take control of their attention, or simply keep Reels and Shorts out of reach without deleting social apps entirely.
+### 🧠 Living Cartoon Brain Mascot & Poses
+An adorable, expressive companion that changes appearance based on your digital habits:
+* **Pose 1: Energetic & Fresh (0–24 Reels / Fatigue):** Bright pink, sparkling eyes, cheerful smile, and confident posture.
+* **Pose 2: Starting to Feel Tired (25–49 Reels / Fatigue):** Heavy eyelids, fading smile, slightly drooping posture.
+* **Pose 3: Very Exhausted (50–99 Reels / Fatigue):** Noticeable dark circles, slouched body, visibly struggling.
+* **Pose 4: Critically Drained (100 Reels / Fatigue):** Emotionally vulnerable, deeply slouched, desperately in need of rest.
 
-## ✨ Features
+### ⚡ Shivering & Trembling Animation
+When fatigue reaches critical levels (**$\ge 80$**), the mascot physically **trembles and shivers** on your screen, giving you an immediate emotional cue that your brain is overwhelmed by dopamine overload.
 
-| | |
-|---|---|
-| 🚫 **Block All** | Instantly block every supported platform — Instagram Reels, YouTube Shorts, TikTok, Facebook Reels and Snapchat Spotlight. |
-| ⏳ **Daily Limit** | Set a daily screen-time budget for supported apps. Hit the cap? You're locked out of the feed until tomorrow. |
-| ⏱️ **Live Brain Rot Timer** | A real-time overlay timer follows your Shorts/Reels session so you always know how long you've been scrolling. |
-| ⏸️ **Pause** | Need a quick breather? Pause blocking for 5 minutes and get back to it afterwards. |
-| 🔁 **Interval Timer** | Alternate between usage and break windows for controlled social media access throughout the day. |
-| 📊 **Usage Tracking** | Detailed stats on time spent per app — Reels, Shorts, TikTok, Facebook and Spotlight, broken down by session. |
+### ⏱️ Dual-Rate Cognitive Fatigue Engine
+* **Short-Form Algorithmic Feeds (Reels / Shorts / TikTok / Likee):** Rapid dopamine spikes exhaust the brain at **+1 point per reel** (or per 30 seconds).
+* **General Screen Time:** Everyday app use gently adds **+1 point per 5 minutes**.
+* **Zero Battery Drain:** Derived entirely from timestamp differentials ($\Delta t$) on screen transitions—no background wake locks or battery-draining timer loops.
 
-### 📱 Supported apps
+### 🍃 Timestamp-Based Healing & Recovery
+* **Grace Period:** The first **5 minutes** away from feeds incurs zero reduction.
+* **Natural Healing:** After 5 minutes, your brain recovers **1 fatigue point per additional minute** away from feeds.
+* **Midnight Rollover:** Daily reel counter resets at local midnight ($00:00$), but fatigue recovers organically rather than abruptly resetting.
 
-`Instagram Reels` · `YouTube Shorts` · `YouTube Kids` · `YouTube ReVanced` · `TikTok` · `TikTok Lite` · `Facebook` · `Facebook Lite` · `Snapchat Spotlight`
+### 🔔 Non-Intrusive 20-Minute Break Reminder
+When you continuously watch short videos for 20 minutes, BrainBuddy displays an elegant, non-blocking floating pill overlay:
+> *"You've been scrolling for a while. Your little brain needs a break."*
+* Does not block touch interactions or freeze playback.
+* Automatically fades out after 6 seconds.
+* Respects a minimum **30-minute cooldown** and requires zero notification permissions.
 
-Stories, DMs and dedicated viewers are handled too — Scrolless knows the difference between a Reel and a video someone sent you in DMs. 💬
+### 🛡️ Complete Suite of Core Blocking Modes
+* 🚫 **Block All:** Instantly blocks every supported short-video feed.
+* ⏳ **Daily Limit:** Set a daily screen-time quota for short-form content.
+* 🔁 **Interval Timer:** Alternate between allowed viewing windows and mandatory mindful breaks.
+* ⏸️ **Pause Timer:** Temporarily pause restrictions when you need quick access.
+* 📊 **Usage Analytics:** Detailed local charts showing daily and weekly trends per app.
 
-## ⚙️ How it works
+---
 
-Scrolless runs an Android **Accessibility Service** that watches which app and screen is in the foreground. When it recognizes a short-form feed — a Reel, a Short, a TikTok or Spotlight — it draws an overlay over the video and blocks the scroll, while leaving the rest of the app (inbox, profile, messages) untouched.
+## 📱 Supported Platforms
 
-Because the detection happens locally on your device against a small set of rules, **nothing is uploaded, there is no account, and there are no ads or trackers.**
+BrainBuddy monitors and blocks short-form feeds while keeping messaging, profiles, and feeds usable:
 
-<div align="center">
-  &nbsp;
-  <img src="art/art_1.jpg" alt="Scrolless blocking modes: Block All, Daily Limit and Interval Timer" width="250">
-  &nbsp;
-</div>
+* 📸 **Instagram:** Reels & Stories (DM videos exempted)
+* 🔴 **YouTube:** Shorts, YouTube Kids & YouTube ReVanced
+* 🎵 **TikTok & TikTok Lite:** Feed player & video cover overlay
+* 📘 **Facebook & Facebook Lite:** Reels & Stories
+* 👻 **Snapchat:** Spotlight & Stories
+* 💜 **Likee & Likee Lite:** Video player feeds
 
+---
+
+## 🧬 How Brain Fatigue & Recovery Works
+
+```mermaid
+flowchart LR
+    A[Reels / Shorts / TikTok] -->|+1 pt per reel| B[Fatigue Score: 0-100]
+    C[General Screen Time] -->|+1 pt per 5 min| B
+    B -->|Fatigue >= 80| D[Trembling Mascot Animation]
+    E[Break Away > 5 min] -->|-1 pt per minute| B
+    F[Local Midnight 00:00] -->|Resets Reel Count Only| G[Daily Counters]
+    F -.->|Fatigue Recovers Naturally| B
+```
+
+---
 
 ## ⬇️ Download
 
-Grab the latest APK from the releases page:
+Download the latest pre-compiled APK directly from GitHub:
 
-**👉 [Releases](https://github.com/Xeven777/Scrolless/releases/latest)**
+**👉 [Download BrainBuddy APK](https://github.com/dev-talha/brain-buddy/actions)**
 
-1. Download the latest `.apk` from the release page
-2. Install it on your device (**Android 8.0+** / Android Oreo or newer)
-3. Open Scrolless and grant the **Accessibility** permission when prompted
-4. Set your limits and stop the scroll 🎉
-
-> 💡 **Tip:** Android may warn about "unknown apps" when installing an APK — that's standard for anything installed outside the Play Store. Scrolless is open source, so you can verify the build yourself if you're paranoid (in a good way 🕵️).
-
-## 🛠 Building from source
-
-**Requirements**
-
-- 🧰 [Android Studio](https://developer.android.com/studio) (or just a terminal)
-- ☕ JDK 17
-- 🤖 Android SDK 37
-
-**Build**
-
-```bash
-git clone https://github.com/Xeven777/Scrolless.git
-cd Scrolless
-./gradlew :app:assembleDebug
-# APK → app/build/outputs/apk/debug/app-debug.apk
-```
-
-**Checks used by CI**
-
-```bash
-./gradlew spotlessCheck   # 🎨 code formatting
-./gradlew test            # 🧪 unit tests
-./gradlew :app:lintDebug  # 📝 android lint
-```
-
-### 📦 Project structure
-
-```
-Scrolless/
-├── app/                  # 📱 Application module (UI shell, overlays, accessibility service)
-├── core/
-│   ├── data/             # 💾 Repositories + local database
-│   ├── domain/           # 🧠 Detection rules & business logic
-│   ├── designsystem/     # 🎨 Theme, colors, typography
-│   └── logging/          # 🪵 Logging utilities
-└── feature/
-    ├── home/             # 🏠 Home, timers & usage analytics
-    └── settings/         # ⚙️ Settings screen
-```
-
-Built with **Kotlin**, **Jetpack Compose**, **Hilt**, **Room**, and a lot of ☕.
-
-## ❓ FAQ
-
-**Does Scrolless block Instagram entirely?**
-No. You choose the mode. **Block All** blocks every supported short-form feed, while **Daily Limit** and **Interval Timer** only stop you once your budget is used up. DMs, Stories and profiles stay usable.
-
-**Can it block YouTube Shorts without blocking normal YouTube videos?**
-Yes. Scrolless detects the Shorts player specifically, so regular long-form YouTube videos keep working.
-
-**Is it free?**
-Yes. Scrolless is free and open source under the **GPL-3.0** license. There are no ads, no subscriptions and no in-app purchases.
-
-**Does it collect my data?**
-No. Detection runs entirely on your device. There is no account, no analytics SDK and no cloud sync — you can verify this by reading the source.
-
-**Why does it need the Accessibility permission?**
-Accessibility is the only Android API that lets an app see which screen is on the foreground and draw an overlay over it. That is exactly what's needed to spot a Reel the instant it appears. It's a powerful permission, which is why the whole app is open source.
-
-**How do I uninstall it?**
-Turn off the Accessibility service in **Settings → Accessibility → Scrolless**, then uninstall the app normally. Never leave an accessibility service enabled after you've stopped using it.
-
-**Which Android versions are supported?**
-Android 8.0 (Oreo) and newer.
-
-**Does it work on iOS?**
-No — Scrolless is Android-only. The blocking approach relies on Android's Accessibility Service, which has no iOS equivalent.
-
-## 🔧 Troubleshooting
-
-**Scrolless isn't blocking anything.**
-Open **Settings → Accessibility** and confirm the Scrolless service is switched on. Android silently disables accessibility services after some system updates.
-
-**Blocking stopped after a phone restart.**
-Some OEMs (Xiaomi, Samsung, OnePlus and others) aggressively kill background services. Add Scrolless to your battery-optimisation allow-list to keep it running.
-
-**A new short-form feed slips through.**
-Detection rules live in the open-source code and improve over time — [open an issue](https://github.com/Xeven777/Scrolless/issues) with the app and screen name and it can be added.
-
-**The in-app timer overlay is missing.**
-Check that **Show on-screen timer** is enabled in Scrolless settings.
-
-## 🤝 Contributing
-
-Contributions make the ocean grow 🌊 — bug reports, feature ideas and pull requests are all welcome!
-
-1. 🍴 Fork the repo
-2. 🌿 Create your feature branch (`git checkout -b feature/amazing-thing`)
-3. ✅ Run `./gradlew spotlessCheck test`
-4. 💾 Commit (`git commit -m 'Add amazing thing'`)
-5. 📤 Push (`git push origin feature/amazing-thing`)
-6. 📩 Open a Pull Request
-
-Found a bug, or an app that slips past the filter? [Open an issue](https://github.com/Xeven777/Scrolless/issues) — the smarter the detection rules get, the fewer Reels everyone watches. 🧠
-
-## 💖 Support
-
-If Scrolless saved you from an hour of Reels, consider ⭐ starring the repo — it really helps!
-
-## 🔑 Keywords
-
-reels blocker · shorts blocker · tiktok blocker · block instagram reels · block youtube shorts · stop doomscrolling · anti doomscroll app · brain rot app · screen time control android · digital wellbeing alternative · app blocker android · open source app blocker · accessibility service blocker · short-form video blocker · focus app android · facebook reels blocker · snapchat spotlight blocker · kotlin jetpack compose app
-
-## 📄 License
-
-Scrolless is licensed under the [GNU General Public License v3.0](LICENSE) — free as in freedom ✊.
-
-```
-Copyright (C) 2026 Anish (Xeven777)
-```
-
-Some bundled assets (fonts, icons) are covered separately under the [ASSETS_LICENSE](ASSETS_LICENSE).
+1. Download the latest `BrainBuddy-APKs` artifact from the Actions tab.
+2. Install the `.apk` on your device (**Android 8.0+**).
+3. Open BrainBuddy and enable the **Accessibility** permission when prompted.
+4. Set your wellbeing goals and let BrainBuddy keep your scrolling mindful! 🎉
 
 ---
 
-<div align="center">
+## 🛠 Building and CI
 
-**Maintained with ❤️ by [Anish](https://github.com/Xeven777)**. Inspired from [Scrolless](https://github.com/duartebarbosadev/scrolless).
+BrainBuddy features a complete **GitHub Actions CI/CD pipeline**—you don't even need Android SDK or Java installed locally to compile and test it.
 
-🎸 <a href="https://github.com/Xeven777">GitHub</a> · ⭐ <a href="https://github.com/Xeven777/Scrolless">Star Scrolless</a> · 🐛 <a href="https://github.com/Xeven777/Scrolless/issues">Report an issue</a>
+### Local Build Requirements:
+* JDK 21
+* Android SDK 37 (compileSdk 37)
+* Android Studio or Terminal
 
-</div>
+```bash
+git clone https://github.com/dev-talha/brain-buddy.git
+cd brain-buddy
+
+# Run unit tests
+./gradlew test
+
+# Build Debug APK
+./gradlew :app:assembleDebug
+
+# Build Release APK
+./gradlew :app:assembleRelease
+```
+
+---
+
+## 📦 Project Architecture
+
+```
+brain-buddy/
+├── app/                  # Application module, overlays, and Accessibility Service
+├── core/
+│   ├── domain/           # Brain fatigue engine, calculation logic, detection models & unit tests
+│   ├── data/             # Repositories, persistence, and Room database
+│   ├── designsystem/     # Mascot drawables, themes, and UI components
+│   └── logging/          # Timber logging setup
+└── feature/
+    ├── home/             # Mascot UI cards, dashboard, and analytics timeline
+    └── settings/         # Configuration, theme, and break schedules
+```
+
+---
+
+## 🤝 Credits & Acknowledgements
+
+BrainBuddy is a fork of and heavily inspired by the incredible open-source project **[Scrolless](https://github.com/Xeven777/Scrolless)**, created by **Anish ([@Xeven777](https://github.com/Xeven777))** (which was originally inspired by [duartebarbosadev/scrolless](https://github.com/duartebarbosadev/scrolless)).
+
+We extend our deep gratitude to:
+* **[Anish (Xeven777)](https://github.com/Xeven777)** for building the rock-solid accessibility detection architecture and blocking foundation in Scrolless.
+* The open-source community for championing digital wellbeing and attention autonomy.
+
+BrainBuddy builds upon that foundation by introducing the **emotional cartoon Brain mascot**, **shivering fatigue animations**, **dopamine-weighted screen-time math**, and **timestamp-based restorative recovery**.
+
+---
+
+## 📄 License
+
+BrainBuddy is licensed under the **[GNU General Public License v3.0](LICENSE)**.
+
+```
+Copyright (C) 2026 BrainBuddy Contributors
+Original work Copyright (C) 2026 Anish (Xeven777)
+```
+
+All bundled character artwork and mascot assets are licensed under the [ASSETS_LICENSE](ASSETS_LICENSE).
