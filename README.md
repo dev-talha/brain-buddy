@@ -9,9 +9,9 @@
 **Protect your brain from algorithmic burnout. Block Reels, Shorts, TikTok and Likee. Watch your brain recover as you take mindful breaks.**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=for-the-badge&label=License&logo=gnu&logoColor=white&color=3F51B5)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/dev-talha/brain-buddy?style=for-the-badge&label=Release&color=3F51B5)](https://github.com/dev-talha/brain-buddy/releases/latest)
 [![Android](https://img.shields.io/badge/Android-8.0%20%2B-blue.svg?style=for-the-badge&logo=android&logoColor=white&color=3F51B5)](#download)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](#contributing)
-[![GitHub Actions CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](#building-and-ci)
 
 <br>
 
@@ -110,14 +110,27 @@ flowchart LR
 
 ## Download
 
-Download the latest pre-compiled APK directly from GitHub:
+Download the latest version of BrainBuddy directly from GitHub Releases:
 
-**[Download BrainBuddy APK](https://github.com/dev-talha/brain-buddy/actions)**
+<p align="center">
+  <a href="https://github.com/dev-talha/brain-buddy/releases/latest/download/BrainBuddy-debug.apk">
+    <img src="https://img.shields.io/badge/Download%20Latest%20APK-Direct%20Download-success?style=for-the-badge&logo=android&logoColor=white" alt="Download Latest APK">
+  </a>
+  <a href="https://github.com/dev-talha/brain-buddy/releases">
+    <img src="https://img.shields.io/badge/GitHub-All%20Releases-black?style=for-the-badge&logo=github" alt="All Releases">
+  </a>
+</p>
 
-1. Download the latest `BrainBuddy-APKs` artifact from the GitHub Actions tab.
-2. Install the `.apk` on your device (**Android 8.0 or newer**).
-3. Open BrainBuddy and enable the **Accessibility** permission when prompted.
-4. Set your wellbeing goals and let BrainBuddy keep your scrolling mindful.
+### Direct Links
+* [**Download Latest BrainBuddy APK (Direct Download)**](https://github.com/dev-talha/brain-buddy/releases/latest/download/BrainBuddy-debug.apk) — *Direct one-click download for Android (`BrainBuddy-debug.apk`)*
+* [**Latest Release Page**](https://github.com/dev-talha/brain-buddy/releases/latest) — *View change notes and release assets*
+* [**All Releases Archive**](https://github.com/dev-talha/brain-buddy/releases) — *Browse all past builds and versions*
+
+### Installation Steps
+1. Tap [**Download Latest BrainBuddy APK**](https://github.com/dev-talha/brain-buddy/releases/latest/download/BrainBuddy-debug.apk) to save the `.apk` on your phone.
+2. Tap the file in your notification bar or downloads folder to install it.
+3. Open **BrainBuddy** and grant the **Accessibility** service permission when prompted (this allows BrainBuddy to detect short-form video containers).
+4. Set your wellbeing preferences and keep your digital scrolling mindful.
 
 ---
 
