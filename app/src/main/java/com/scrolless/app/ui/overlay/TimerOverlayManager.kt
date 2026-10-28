@@ -199,12 +199,17 @@ class TimerOverlayManager @Inject constructor(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0 // Centered directly under the front punch-hole camera
             y = defaultY
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
         }
 
         screenBounds = calculateScreenBounds()
@@ -217,8 +222,18 @@ class TimerOverlayManager @Inject constructor(
             startFatigueObserver()
             rootView?.post { startEnterAnimation() }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to show Dynamic Notch overlay")
-            cleanupView()
+            Timber.w(e, "Failed with TYPE_ACCESSIBILITY_OVERLAY, attempting TYPE_APPLICATION_OVERLAY fallback")
+            try {
+                layoutParams?.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                wm.addView(rootView, layoutParams)
+
+                startTimer()
+                startFatigueObserver()
+                rootView?.post { startEnterAnimation() }
+            } catch (e2: Exception) {
+                Timber.e(e2, "Failed to show Dynamic Notch overlay with both window types")
+                cleanupView()
+            }
         }
     }
 

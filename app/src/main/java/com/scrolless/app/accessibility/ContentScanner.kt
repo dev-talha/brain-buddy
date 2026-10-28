@@ -110,11 +110,15 @@ internal class ContentScanner(
     }
 
     private fun findRootNode(appWindows: AppWindows, activeApp: ResolvedBlockableApp?): AccessibilityNodeInfo? {
-        // A window-attached cover may be the active root; read its parent application instead.
-        if (useWindowAttachedCover && activeApp?.coverDetector != null) {
-            return appWindows.roots.values.firstOrNull { it?.packageName?.toString() == activeApp.packageId }
+        val activeRoot = try { service.rootInActiveWindow } catch (_: Exception) { null }
+        if (activeRoot != null && (activeApp == null || activeRoot.packageName?.toString() == activeApp.packageId)) {
+            return activeRoot
         }
-        return service.rootInActiveWindow
+        if (activeApp != null) {
+            val windowRoot = appWindows.roots.values.firstOrNull { it?.packageName?.toString() == activeApp.packageId }
+            if (windowRoot != null) return windowRoot
+        }
+        return activeRoot
     }
 
     private fun resolveForegroundBrainRotApp(
@@ -217,7 +221,11 @@ internal class ContentScanner(
     /** Looks for blocked content across all visible windows of [blockableApp]. */
     fun findVisibleBlockedContent(blockableApp: ResolvedBlockableApp, activeCover: ContentCover? = null): DetectedBlockedContent? {
         val appWindows = AppWindows(service.windows)
-        return appWindows.roots.values.firstNotNullOfOrNull { it?.detectContent(blockableApp, appWindows, activeCover) }
+        val rootsToCheck = buildList {
+            try { service.rootInActiveWindow?.let(::add) } catch (_: Exception) {}
+            addAll(appWindows.roots.values.filterNotNull())
+        }.distinct()
+        return rootsToCheck.firstNotNullOfOrNull { it.detectContent(blockableApp, appWindows, activeCover) }
     }
 
     /** Checks for an app window; cover-based apps must also have foreground focus. */
@@ -244,6 +252,12 @@ internal class ContentScanner(
                 activity.className.contains(activityName, ignoreCase = true)
         }
 
+        private val activeRootPackage = try {
+            service.rootInActiveWindow?.packageName?.toString()
+        } catch (_: Exception) {
+            null
+        }
+
         // Determine which package currently has user focus or active interaction.
         val foregroundPackage = foregroundAppPackage(
             roots.map { (window, root) ->
@@ -254,13 +268,14 @@ internal class ContentScanner(
                     isFocused = window.isFocused,
                 )
             },
-        )
+        ) ?: activeRootPackage
 
         // Covers require foreground focus; other apps only need a visible window.
-        fun isVisible(app: ResolvedBlockableApp): Boolean = if (app.coverDetector != null) {
-            foregroundPackage == app.packageId
-        } else {
-            roots.values.any { it?.packageName?.toString() == app.packageId }
+        // Fallback to active window root node ensures 100% compatibility on Xiaomi HyperOS/MIUI where windows list is empty.
+        fun isVisible(app: ResolvedBlockableApp): Boolean {
+            if (activeRootPackage == app.packageId) return true
+            if (foregroundPackage == app.packageId) return true
+            return roots.values.any { it?.packageName?.toString() == app.packageId }
         }
     }
 
@@ -305,9 +320,11 @@ internal class ContentScanner(
                 return true
             }
 
-            // ID-only alternatives can use Android's indexed view lookup instead of walking the full tree.
-            if (detectionMethod.detectionMethods.all { it is DetectionMethod.ViewId }) {
-                return detectionMethod.detectionMethods.any { matchesDetectionMethod(blockableApp, it, appWindows) }
+            // Check direct ViewIds via Android indexed view lookup first for instant performance.
+            for (method in detectionMethod.detectionMethods) {
+                if (method is DetectionMethod.ViewId && hasVisibleViewId(blockableApp.getViewId(method))) {
+                    return true
+                }
             }
         }
 
