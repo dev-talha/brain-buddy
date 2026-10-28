@@ -56,8 +56,8 @@ android {
         applicationId = "com.scrolless.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 25
-        versionName = "1.7.2"
+        versionCode = System.getenv("APP_VERSION_CODE")?.toIntOrNull() ?: 25
+        versionName = System.getenv("APP_VERSION_NAME") ?: "1.7.14"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

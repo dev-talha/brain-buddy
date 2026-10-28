@@ -74,6 +74,19 @@ jobs:
             echo "No release keystore configured; building unsigned release or debug APK."
           fi
 
+      - name: Determine and Inject Release Version
+        id: release_version
+        run: |
+          VERSION_NUM="${{ github.run_number }}"
+          VERSION="v1.7.${VERSION_NUM}"
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "name=BrainBuddy $VERSION" >> "$GITHUB_OUTPUT"
+          echo "APP_VERSION_NAME=1.7.${VERSION_NUM}" >> "$GITHUB_ENV"
+          echo "APP_VERSION_CODE=${VERSION_NUM}" >> "$GITHUB_ENV"
+          sed -i -E "s/versionName = \".*\"/versionName = \"1.7.${VERSION_NUM}\"/" app/build.gradle.kts
+          sed -i -E "s/versionCode = [0-9]+/versionCode = ${VERSION_NUM}/" app/build.gradle.kts
+          echo "Injected version 1.7.${VERSION_NUM} (code ${VERSION_NUM}) into app/build.gradle.kts"
+
       - name: Run Unit Tests
         run: |
           ./gradlew test -x spotlessCheck --stacktrace || {
@@ -109,13 +122,6 @@ jobs:
           name: BrainBuddy-APKs
           path: apks/*.apk
           retention-days: 14
-
-      - name: Determine Release Version
-        id: release_version
-        run: |
-          VERSION="v1.7.${{ github.run_number }}"
-          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "name=BrainBuddy $VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create or Update GitHub Release
         if: github.ref == 'refs/heads/main'
