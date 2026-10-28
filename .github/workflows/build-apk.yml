@@ -75,7 +75,12 @@ jobs:
           fi
 
       - name: Run Unit Tests
-        run: ./gradlew test
+        run: |
+          ./gradlew test -x spotlessCheck --stacktrace || {
+            echo "=== UNIT TEST FAILURES ==="
+            find . -type f -name "*.xml" -path "*/test-results/*" -exec echo "--- {} ---" \; -exec cat {} \;
+            exit 1
+          }
 
       - name: Build Debug APK
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'all' || inputs.build_type == 'debug' }}
