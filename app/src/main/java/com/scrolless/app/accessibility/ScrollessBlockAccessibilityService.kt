@@ -22,6 +22,7 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -36,8 +37,8 @@ import com.scrolless.app.core.model.BlockingConfig
 import com.scrolless.app.core.model.BlockingResult
 import com.scrolless.app.core.model.ContentBlockAction
 import com.scrolless.app.core.model.ResolvedBlockableApp
-import com.scrolless.app.core.repository.BlockingConfigRepository
 import com.scrolless.app.core.domain.fatigue.BrainFatigueCalculator
+import com.scrolless.app.core.repository.BlockingConfigRepository
 import com.scrolless.app.core.repository.BrainFatigueRepository
 import com.scrolless.app.core.repository.SessionTracker
 import com.scrolless.app.core.repository.UserSettingsStore
@@ -47,6 +48,7 @@ import com.scrolless.app.ui.overlay.BreakReminderOverlayManager
 import com.scrolless.app.ui.overlay.TimerOverlayManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -183,10 +185,16 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Whether videos received in direct messages are exempt from blocking. */
     private var currentAllowVideosSentByDm: Boolean = false
 
-    private var lastScrollEventTimeMs: Long = 0L
-
     /** Furthest feed position counted in the current session; going back to an earlier reel is not recounted. */
     private var maxCountedReelIndex: Int? = null
+
+    /** Scroll distance collected since the last counted reel, for feeds that report no item index. */
+    private var scrollAccumulatedPx: Int = 0
+
+    /** Last absolute scroll offset seen, used where the event carries no scroll delta. */
+    private var lastScrollY: Int = UNSET_SCROLL_Y
+
+    private val displayHeightPx: Int by lazy { resources.displayMetrics.heightPixels }
 
     /** Start of the current stretch in a social app outside short videos, or 0 when not in one. */
     private var generalSocialMarkMs: Long = 0L
@@ -577,6 +585,47 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Counts one reel per screenful of vertical scrolling, for feeds that report no item index
+     * (TikTok, TikTok Lite and Likee all send a burst of small scroll events per swipe instead).
+     * Scrolling inside a smaller list, such as a comment sheet, is ignored.
+     */
+    private fun hasScrolledOneFeedPage(event: AccessibilityEvent): Boolean {
+        val pageHeight = feedPageHeight(event) ?: return false
+        val delta = scrollDelta(event)
+        if (delta == 0) return false
+
+        scrollAccumulatedPx += abs(delta)
+        if (scrollAccumulatedPx < pageHeight) return false
+        scrollAccumulatedPx -= pageHeight
+        return true
+    }
+
+    /** Prefers the reported scroll delta, falling back to the change in absolute offset. */
+    private fun scrollDelta(event: AccessibilityEvent): Int {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && event.scrollDeltaY != 0) {
+            return event.scrollDeltaY
+        }
+        val scrollY = event.scrollY
+        if (scrollY < 0) return 0
+        val previous = lastScrollY
+        lastScrollY = scrollY
+        return if (previous == UNSET_SCROLL_Y) 0 else scrollY - previous
+    }
+
+    /** Height of the scrolling view, or null when it is too small to be a full-screen feed. */
+    private fun feedPageHeight(event: AccessibilityEvent): Int? {
+        val source = try { event.source } catch (_: Exception) { null }
+        val height = if (source != null) {
+            val bounds = Rect()
+            source.getBoundsInScreen(bounds)
+            bounds.height()
+        } else {
+            displayHeightPx
+        }
+        return height.takeIf { it >= displayHeightPx * MIN_FEED_HEIGHT_PERCENT / 100 }
+    }
+
+    /**
      * Tracks social media pages opened in a browser by reading the address bar.
      * Browsers hide the bar while scrolling, so the last known page is kept until the user leaves the browser.
      */
@@ -619,11 +668,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
             // The first reel was counted on enter; a first event past position 0 means the user already swiped.
             val isNewReel = if (maxIndex == null) index > 0 else index > maxIndex
             if (!isNewReel) return
-        } else {
-            // Feeds without position info fall back to throttled scroll counting.
-            val now = System.currentTimeMillis()
-            if (now - lastScrollEventTimeMs <= 900L) return
-            lastScrollEventTimeMs = now
+        } else if (!hasScrolledOneFeedPage(event)) {
+            return
         }
 
         Timber.d("New reel detected (index=%d)", event.fromIndex)
@@ -640,6 +686,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         Timber.d("Entered blocked content at %d (app=%s, paused=%b)", session.startedAtMillis, session.app, isPauseActive())
 
         maxCountedReelIndex = null
+        scrollAccumulatedPx = 0
+        lastScrollY = UNSET_SCROLL_Y
         brainFatigueRepository.onReelWatched(1)
         timerOverlayManager.notifyReelScrolled()
 
@@ -969,6 +1017,12 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         /** How often fatigue recovery is applied while the phone is in use. */
         const val RECOVERY_REFRESH_INTERVAL_MS = 30_000L
+
+        /** Sentinel for "no scroll offset seen yet"; 0 is a real offset. */
+        const val UNSET_SCROLL_Y = Int.MIN_VALUE
+
+        /** A scrolling view smaller than this share of the screen is a list, not a reel feed. */
+        const val MIN_FEED_HEIGHT_PERCENT = 60
 
         /** Minimum viewing duration required to record usage. Sub-second visits (like immediate blocks) are ignored. */
         const val MIN_TRACKED_DURATION_MILLIS = 1_000L
