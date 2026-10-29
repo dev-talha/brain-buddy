@@ -16,8 +16,6 @@
  */
 package com.scrolless.app.ui.overlay
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -90,6 +88,9 @@ class TimerOverlayManager @Inject constructor(
     private var sessionStartTime = 0L
     private var usage = IntervalUsage.NOT_STARTED
     private var windowLengthMillis = 0L
+
+    /** Usage shown while no short video is playing; the pill stays visible with a frozen time. */
+    private var frozenDurationMillis: Long? = null
     private var timerJob: Job? = null
     private var fatigueJob: Job? = null
     private var exitAnimationJob: Job? = null
@@ -126,10 +127,33 @@ class TimerOverlayManager @Inject constructor(
         showOverlay(sessionStartAt, intervalUsage, intervalLengthMillis)
     }
 
+    /** Keeps the pill on screen outside short videos, showing today's usage without ticking. */
+    fun showIdle(dailyUsageMillis: Long) {
+        if (rootView != null) return
+        showOverlay(0L, IntervalUsage.NOT_STARTED, 0L, frozenMillis = dailyUsageMillis)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
-    private fun showOverlay(sessionStartAt: Long, usage: IntervalUsage, windowLengthMillis: Long) {
+    private fun showOverlay(
+        sessionStartAt: Long,
+        usage: IntervalUsage,
+        windowLengthMillis: Long,
+        frozenMillis: Long? = null,
+    ) {
+        sessionStartTime = sessionStartAt
+        this.usage = usage
+        this.windowLengthMillis = windowLengthMillis
+        frozenDurationMillis = frozenMillis
+
+        // The pill is already on screen: switch it between live and idle without re-adding the window.
         if (rootView != null) {
-            cleanupView()
+            exitAnimationJob?.cancel()
+            exitAnimationJob = null
+            rootView?.animate()?.cancel()
+            rootView?.alpha = 1f
+            rootView?.translationY = 0f
+            if (frozenMillis == null) startTimer() else timerTextView?.text = formatNotchText(currentFatigueState, frozenMillis)
+            return
         }
         if (!::serviceContext.isInitialized) {
             Timber.w("Timer overlay requested before service context was attached")
@@ -137,9 +161,6 @@ class TimerOverlayManager @Inject constructor(
         }
         val wm = windowManager ?: return
 
-        sessionStartTime = sessionStartAt
-        this.usage = usage
-        this.windowLengthMillis = windowLengthMillis
         currentFatigueState = brainFatigueRepository.fatigueState.value
 
         val paddingH = dpToPx(12f)
@@ -214,7 +235,7 @@ class TimerOverlayManager @Inject constructor(
             rootView?.alpha = 1f
             wm.addView(rootView, layoutParams)
 
-            startTimer()
+            if (frozenMillis == null) startTimer()
             startFatigueObserver()
             rootView?.post { startEnterAnimation() }
         } catch (e: Exception) {
@@ -223,7 +244,7 @@ class TimerOverlayManager @Inject constructor(
                 layoutParams?.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 wm.addView(rootView, layoutParams)
 
-                startTimer()
+                if (frozenMillis == null) startTimer()
                 startFatigueObserver()
                 rootView?.post { startEnterAnimation() }
             } catch (e2: Exception) {
@@ -269,18 +290,12 @@ class TimerOverlayManager @Inject constructor(
 
         timerJob?.cancel()
         timerJob = null
-        fatigueJob?.cancel()
-        fatigueJob = null
-        stopTrembling()
 
-        timerTextView?.text = formatNotchText(currentFatigueState, displayedDurationAt(sessionEndAt))
+        // Stay on screen in idle mode; the fatigue observer keeps the mascot and reel count live.
+        val finalDuration = displayedDurationAt(sessionEndAt)
+        frozenDurationMillis = finalDuration
+        timerTextView?.text = formatNotchText(currentFatigueState, finalDuration)
         startWiggleAnimation()
-
-        exitAnimationJob?.cancel()
-        exitAnimationJob = coroutineScope.launch {
-            delay(SUMMARY_DISPLAY_DURATION_MS.milliseconds)
-            startExitAnimation()
-        }
     }
 
     fun dismissImmediately() {
@@ -391,7 +406,7 @@ class TimerOverlayManager @Inject constructor(
         mascotImageView?.rotation = 0f
     }
 
-    private fun displayedDurationAt(nowMillis: Long): Long = usage.plusSession(
+    private fun displayedDurationAt(nowMillis: Long): Long = frozenDurationMillis ?: usage.plusSession(
         sessionStartMillis = sessionStartTime,
         sessionEndMillis = nowMillis,
         lengthMillis = windowLengthMillis,
@@ -407,23 +422,6 @@ class TimerOverlayManager @Inject constructor(
             .alpha(1f)
             .setDuration(280)
             .setInterpolator(DecelerateInterpolator())
-            .start()
-    }
-
-    private fun startExitAnimation() {
-        val view = rootView ?: return
-        view.animate()
-            .translationY(-dpToPx(50f).toFloat())
-            .alpha(0f)
-            .setDuration(EXIT_ANIMATION_DURATION_MS)
-            .setInterpolator(DecelerateInterpolator())
-            .setListener(
-                object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        cleanupView()
-                    }
-                },
-            )
             .start()
     }
 
@@ -535,8 +533,6 @@ class TimerOverlayManager @Inject constructor(
     }
 
     companion object {
-        private const val EXIT_ANIMATION_DURATION_MS = 250L
-        private const val SUMMARY_DISPLAY_DURATION_MS = 1200L
     }
 
     private class DragInterceptFrameLayout(context: Context) : FrameLayout(context) {

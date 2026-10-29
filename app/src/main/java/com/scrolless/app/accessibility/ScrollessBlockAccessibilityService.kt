@@ -261,6 +261,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         // Start with restricted configuration to save battery
         refreshServiceConfig()
+        showIdlePill()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
@@ -568,6 +569,21 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
     }
 
+    /** Keeps the BrainBuddy pill visible outside short videos with today's usage. */
+    private fun showIdlePill() {
+        serviceScope.launch {
+            val dailyUsageMillis = try {
+                sessionTracker.getDailyUsage()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Could not read daily usage for the idle pill")
+                0L
+            }
+            if (contentSession == null) timerOverlayManager.showIdle(dailyUsageMillis)
+        }
+    }
+
     /** A timer settings failure should skip the timer without interrupting blocking. */
     private suspend fun loadTimerConfig(): BlockingConfig? = try {
         blockingConfigRepository.getConfig()
@@ -677,6 +693,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
                 timerOverlayManager.dismissImmediately()
                 refreshServiceConfig()
                 saveViewing(finished)
+                showIdlePill()
                 scheduleCoveredContentCheck()
             }
         }
