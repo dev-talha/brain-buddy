@@ -488,6 +488,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         currentForegroundBrainRotApp = nextApp
         refreshServiceConfig()
+
+        // The pill should tick the moment the user opens a supported app (feed included), not only
+        // while a reel is on screen. Blocking itself stays scoped to actual Reels/Shorts content.
+        if (nextApp != null) showLiveAppTimer() else showIdlePill()
     }
 
     /** Called when the accessibility service is interrupted by the system. */
@@ -676,6 +680,33 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
     }
 
+    /**
+     * Ticks the pill while inside a supported app's general feed (not a Reel/Short), anchored to
+     * now and starting from today's already-counted Reel/Short time. Purely a display: it never
+     * writes to daily usage, so the Reels/Shorts-only block limit is unaffected.
+     */
+    private fun showLiveAppTimer() {
+        serviceScope.launch {
+            val config = loadTimerConfig()
+            val dailyUsageMillis = try {
+                sessionTracker.getDailyUsage()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Could not read daily usage for the live app timer")
+                0L
+            }
+            // Bail out if a real Reel/Short session started, or the user already left, while loading.
+            if (contentSession != null || currentForegroundBrainRotApp == null) return@launch
+            val now = System.currentTimeMillis()
+            if (config?.activeOption == BlockOption.IntervalTimer) {
+                timerOverlayManager.showInterval(now, config.intervalUsage, config.settings.intervalLengthMillis)
+            } else {
+                timerOverlayManager.showDaily(now, dailyUsageMillis)
+            }
+        }
+    }
+
     /** Keeps the BrainBuddy pill visible outside short videos with today's usage. */
     private fun showIdlePill() {
         serviceScope.launch {
@@ -749,6 +780,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         if (finished == null) return // A covered player already finished its viewing session.
         timerOverlayManager.hide(finished.startedAtMillis, finished.endedAtMillis)
         serviceScope.launch { saveViewing(finished) }
+        // Still inside the app (just left the Reel/Short itself): resume the ticking general timer.
+        if (currentForegroundBrainRotApp != null) showLiveAppTimer()
     }
 
     /** Records viewing time in the session tracker and closes the session with the blocking manager. */
