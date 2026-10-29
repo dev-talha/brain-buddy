@@ -171,7 +171,12 @@ class BrainFatigueRepositoryImpl @Inject constructor(
             now,
         )
         if (recovered != current.fatigueScore || rolled.todayReelCount != current.todayReelCount) {
-            val newState = rolled.copy(fatigueScore = recovered)
+            // Move the anchor past the minutes already applied so the same break is not subtracted again.
+            val appliedMinutes = (rolled.fatigueScore - recovered).toLong() / BrainFatigueCalculator.RECOVERY_RATE_PER_MINUTE
+            val newState = rolled.copy(
+                fatigueScore = recovered,
+                lastActiveTimestampEpochMs = rolled.lastActiveTimestampEpochMs + appliedMinutes * 60_000L,
+            )
             _fatigueState.value = newState
             persistState(newState)
         }

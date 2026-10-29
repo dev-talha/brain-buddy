@@ -194,6 +194,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** General social time not yet converted into fatigue points. */
     private var generalSocialPendingMs: Long = 0L
 
+    /** Last time recovery was applied, so the pill mascot heals during breaks without opening the app. */
+    private var lastRecoveryRefreshMs: Long = 0L
+
     /** Social media page open in a browser, or null when the user is not on one. */
     private var browserSocialKind: BrowserSocialKind? = null
 
@@ -534,6 +537,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
      */
     private fun accrueGeneralSocialTime() {
         val now = SystemClock.elapsedRealtime()
+        if (contentSession == null && now - lastRecoveryRefreshMs >= RECOVERY_REFRESH_INTERVAL_MS) {
+            lastRecoveryRefreshMs = now
+            brainFatigueRepository.refreshRecovery()
+        }
         if (generalSocialMarkMs > 0L) {
             val elapsed = (now - generalSocialMarkMs).coerceIn(0L, MAX_GENERAL_SOCIAL_GAP_MS)
             if (browserSocialKind == BrowserSocialKind.SHORT_VIDEO) {
@@ -910,6 +917,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         /** Browser short videos cannot be counted one by one: 1 fatigue point per 30 seconds watched. */
         const val BROWSER_SHORT_VIDEO_MILLIS_PER_POINT = 30_000L
+
+        /** How often fatigue recovery is applied while the phone is in use. */
+        const val RECOVERY_REFRESH_INTERVAL_MS = 30_000L
 
         /** Minimum viewing duration required to record usage. Sub-second visits (like immediate blocks) are ignored. */
         const val MIN_TRACKED_DURATION_MILLIS = 1_000L
