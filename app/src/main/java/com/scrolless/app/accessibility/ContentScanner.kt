@@ -445,10 +445,18 @@ internal class ContentScanner(
         return if (total > 0) (toFloat() / total).coerceIn(0f, 1f) else 0f
     }
 
-    /** Checks if a view node is actually visible on screen with non-zero dimensions. */
+    /**
+     * Checks if a view node is actually visible on screen with non-zero dimensions.
+     *
+     * Deliberately ignores [AccessibilityNodeInfo.isVisibleToUser]: on Xiaomi HyperOS/MIUI it can
+     * report false for a node that is genuinely on screen (confirmed live: YouTube's Shorts player,
+     * "reel_player_page_container", was never detected while actually playing on a HyperOS device).
+     * Bounds alone are a reliable enough signal here since this only scans nodes already found by
+     * a specific view ID lookup, not the whole tree, so a stale off-screen node is unlikely to match.
+     */
     private fun isNodeVisibleToTheUser(node: AccessibilityNodeInfo): Boolean {
         val rect = android.graphics.Rect()
         node.getBoundsInScreen(rect)
-        return node.isVisibleToUser && rect.width() > 0 && rect.height() > 0
+        return rect.width() > 0 && rect.height() > 0
     }
 }
