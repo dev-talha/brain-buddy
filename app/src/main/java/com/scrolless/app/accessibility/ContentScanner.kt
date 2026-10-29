@@ -271,17 +271,11 @@ internal class ContentScanner(
         ) ?: activeRootPackage
 
         // Covers require foreground focus; other apps only need a visible window.
-        // Fallback to active window root node ensures 100% compatibility on Xiaomi HyperOS/MIUI where windows list is empty.
-        fun isVisible(app: ResolvedBlockableApp): Boolean {
-            val liveRootPackage = try {
-                service.rootInActiveWindow?.packageName?.toString()
-            } catch (_: Exception) {
-                null
-            }
-            if (liveRootPackage == app.packageId) return true
-            if (activeRootPackage == app.packageId) return true
-            if (foregroundPackage == app.packageId) return true
-            return roots.values.any { it?.packageName?.toString() == app.packageId }
+        // Some ROMs (e.g. HyperOS/MIUI) can return an empty window list, so fall back to the active root.
+        fun isVisible(app: ResolvedBlockableApp): Boolean = if (app.coverDetector != null) {
+            foregroundPackage == app.packageId
+        } else {
+            activeRootPackage == app.packageId || roots.values.any { it?.packageName?.toString() == app.packageId }
         }
     }
 
@@ -455,6 +449,6 @@ internal class ContentScanner(
     private fun isNodeVisibleToTheUser(node: AccessibilityNodeInfo): Boolean {
         val rect = android.graphics.Rect()
         node.getBoundsInScreen(rect)
-        return rect.width() > 0 && rect.height() > 0
+        return node.isVisibleToUser && rect.width() > 0 && rect.height() > 0
     }
 }
