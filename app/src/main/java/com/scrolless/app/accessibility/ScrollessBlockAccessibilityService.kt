@@ -183,6 +183,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     private var lastScrollEventTimeMs: Long = 0L
 
+    /** Furthest feed position counted in the current session; going back to an earlier reel is not recounted. */
+    private var maxCountedReelIndex: Int? = null
+
     /** Timestamp until which blocking is temporarily paused. */
     @Volatile
     private var pauseUntilMillis: Long = 0L
@@ -409,13 +412,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
 
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            val now = System.currentTimeMillis()
-            if (contentSession != null && now - lastScrollEventTimeMs > 900L) {
-                lastScrollEventTimeMs = now
-                Timber.d("Reel scroll detected via accessibility event! Incrementing reel count.")
-                brainFatigueRepository.onReelWatched(1)
-                timerOverlayManager.notifyReelScrolled()
-            }
+            onFeedScrolled(event)
         }
 
         val scan = contentScanner.scan(
@@ -515,6 +512,36 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Counts a reel when the full-screen feed settles on a position not counted yet.
+     * Pagers report the visible item range; one reel on screen means fromIndex == toIndex,
+     * which also ignores multi-item lists such as comments.
+     */
+    private fun onFeedScrolled(event: AccessibilityEvent) {
+        val session = contentSession ?: return
+        if (event.packageName?.toString() != session.app.packageId) return
+
+        val hasPosition = event.itemCount > 0 && event.fromIndex >= 0
+        if (hasPosition) {
+            if (event.fromIndex != event.toIndex) return
+            val index = event.fromIndex
+            val maxIndex = maxCountedReelIndex
+            maxCountedReelIndex = maxOf(index, maxIndex ?: index)
+            // The first reel was counted on enter; a first event past position 0 means the user already swiped.
+            val isNewReel = if (maxIndex == null) index > 0 else index > maxIndex
+            if (!isNewReel) return
+        } else {
+            // Feeds without position info fall back to throttled scroll counting.
+            val now = System.currentTimeMillis()
+            if (now - lastScrollEventTimeMs <= 900L) return
+            lastScrollEventTimeMs = now
+        }
+
+        Timber.d("New reel detected (index=%d)", event.fromIndex)
+        brainFatigueRepository.onReelWatched(1)
+        timerOverlayManager.notifyReelScrolled()
+    }
+
+    /**
      * Called when the user starts viewing blocked content.
      * Starts periodic limit checks and displays the timer overlay if enabled.
      */
@@ -522,6 +549,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         val session = viewingSession ?: return
         Timber.d("Entered blocked content at %d (app=%s, paused=%b)", session.startedAtMillis, session.app, isPauseActive())
 
+        maxCountedReelIndex = null
         brainFatigueRepository.onReelWatched(1)
         timerOverlayManager.notifyReelScrolled()
 
