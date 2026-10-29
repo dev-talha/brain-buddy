@@ -612,6 +612,29 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         return if (previous == UNSET_SCROLL_Y) 0 else scrollY - previous
     }
 
+    /**
+     * Reads the browser's address bar. [rootInActiveWindow] comes back null on some ROMs, so the
+     * browser's own window roots are searched as well before giving up.
+     */
+    private fun readBrowserUrl(browserPackage: String): String? {
+        val urlBarId = BrowserSocialDetector.urlBarIds[browserPackage] ?: return null
+        val roots = buildList {
+            try { rootInActiveWindow?.let(::add) } catch (_: Exception) {}
+            try {
+                windows.mapNotNullTo(this) { window ->
+                    window.root?.takeIf { it.packageName?.toString() == browserPackage }
+                }
+            } catch (_: Exception) {}
+        }
+        return roots.firstNotNullOfOrNull { root ->
+            try {
+                root.findAccessibilityNodeInfosByViewId(urlBarId)?.firstOrNull()?.text?.toString()
+            } catch (_: Exception) {
+                null
+            }?.takeIf { it.isNotBlank() }
+        }
+    }
+
     /** Height of the scrolling view, or null when it is too small to be a full-screen feed. */
     private fun feedPageHeight(event: AccessibilityEvent): Int? {
         val source = try { event.source } catch (_: Exception) { null }
@@ -637,10 +660,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         browserSocialKind = when {
             activePackage == null || !BrowserSocialDetector.isBrowser(activePackage) -> null
-            eventPackage != activePackage -> previous
+            eventPackage != null && eventPackage != activePackage -> previous
             else -> {
-                val urlBarId = BrowserSocialDetector.urlBarIds.getValue(activePackage)
-                val urlText = activeRoot?.findAccessibilityNodeInfosByViewId(urlBarId)?.firstOrNull()?.text?.toString()
+                val urlText = readBrowserUrl(activePackage)
                 if (urlText.isNullOrBlank()) previous else BrowserSocialDetector.classify(urlText)
             }
         }
