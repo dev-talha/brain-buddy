@@ -32,6 +32,7 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -80,6 +81,8 @@ class TimerOverlayManager @Inject constructor(
 
     private var snapAnimator: ValueAnimator? = null
     private var tremblingAnimator: ValueAnimator? = null
+    private var moodAnimator: ValueAnimator? = null
+    private var moodAnimatorPose: MascotPose? = null
     private var velocityTracker: android.view.VelocityTracker? = null
 
     private lateinit var serviceContext: Context
@@ -153,7 +156,7 @@ class TimerOverlayManager @Inject constructor(
             rootView?.alpha = 1f
             rootView?.translationY = 0f
             if (frozenMillis == null) startTimer() else timerTextView?.text = formatNotchText(currentFatigueState, frozenMillis)
-            updateTrembling()
+            updateAnimations()
             return
         }
         if (!::serviceContext.isInitialized) {
@@ -296,6 +299,7 @@ class TimerOverlayManager @Inject constructor(
         val finalDuration = displayedDurationAt(sessionEndAt)
         frozenDurationMillis = finalDuration
         stopTrembling()
+        stopMoodAnimation()
         timerTextView?.text = formatNotchText(currentFatigueState, finalDuration)
         startWiggleAnimation()
     }
@@ -317,6 +321,7 @@ class TimerOverlayManager @Inject constructor(
         timerTextView = null
 
         stopTrembling()
+        stopMoodAnimation()
 
         if (view != null) {
             try {
@@ -360,7 +365,7 @@ class TimerOverlayManager @Inject constructor(
                 val duration = displayedDurationAt(System.currentTimeMillis())
                 timerTextView?.text = formatNotchText(state, duration)
 
-                updateTrembling()
+                updateAnimations()
             }
         }
     }
@@ -379,6 +384,74 @@ class TimerOverlayManager @Inject constructor(
         MascotPose.TIRED -> R.drawable.brain_mascot_tired
         MascotPose.EXHAUSTED -> R.drawable.brain_mascot_exhausted
         MascotPose.DEPLETED -> R.drawable.brain_mascot_depleted
+    }
+
+    private fun updateAnimations() {
+        updateTrembling()
+        updateMoodAnimation()
+    }
+
+    /**
+     * Gives the mascot a looping body motion that matches its mood while a short video is playing.
+     * Only scale and vertical offset are animated, so it combines with the sideways trembling.
+     * The idle pill stays still to save battery.
+     */
+    private fun updateMoodAnimation() {
+        val iv = mascotImageView
+        val pose = currentFatigueState.pose
+        if (iv == null || frozenDurationMillis != null) {
+            stopMoodAnimation()
+            return
+        }
+        if (moodAnimator != null && moodAnimatorPose == pose) return
+        stopMoodAnimation()
+
+        val dp = dpToPx(1f).toFloat()
+        val (durationMs, apply) = when (pose) {
+            // Happy bounce with a little squash at the bottom.
+            MascotPose.ENERGETIC -> 450L to { v: Float ->
+                iv.translationY = -4f * dp * v
+                iv.scaleX = 1.05f - 0.05f * v
+                iv.scaleY = 0.95f + 0.05f * v
+            }
+            // Calm, slow breathing.
+            MascotPose.TIRED -> 1400L to { v: Float ->
+                iv.scaleX = 1f + 0.04f * v
+                iv.scaleY = 1f + 0.04f * v
+            }
+            // Heavy breathing while sagging down.
+            MascotPose.EXHAUSTED -> 1800L to { v: Float ->
+                iv.translationY = 1.5f * dp * v
+                iv.scaleX = 1f + 0.03f * v
+                iv.scaleY = 1f - 0.03f * v
+            }
+            // Barely holding up: deep slow sag.
+            MascotPose.DEPLETED -> 2200L to { v: Float ->
+                iv.translationY = 2.5f * dp * v
+                iv.scaleX = 1f + 0.02f * v
+                iv.scaleY = 1f - 0.04f * v
+            }
+        }
+        moodAnimatorPose = pose
+        moodAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = durationMs
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { apply(it.animatedValue as Float) }
+            start()
+        }
+    }
+
+    private fun stopMoodAnimation() {
+        moodAnimator?.cancel()
+        moodAnimator = null
+        moodAnimatorPose = null
+        mascotImageView?.apply {
+            translationY = 0f
+            scaleX = 1f
+            scaleY = 1f
+        }
     }
 
     /** Trembles only while a short video is playing, so the idle pill never redraws continuously. */
