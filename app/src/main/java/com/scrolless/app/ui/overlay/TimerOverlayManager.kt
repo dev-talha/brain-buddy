@@ -153,6 +153,7 @@ class TimerOverlayManager @Inject constructor(
             rootView?.alpha = 1f
             rootView?.translationY = 0f
             if (frozenMillis == null) startTimer() else timerTextView?.text = formatNotchText(currentFatigueState, frozenMillis)
+            updateTrembling()
             return
         }
         if (!::serviceContext.isInitialized) {
@@ -294,6 +295,7 @@ class TimerOverlayManager @Inject constructor(
         // Stay on screen in idle mode; the fatigue observer keeps the mascot and reel count live.
         val finalDuration = displayedDurationAt(sessionEndAt)
         frozenDurationMillis = finalDuration
+        stopTrembling()
         timerTextView?.text = formatNotchText(currentFatigueState, finalDuration)
         startWiggleAnimation()
     }
@@ -358,11 +360,7 @@ class TimerOverlayManager @Inject constructor(
                 val duration = displayedDurationAt(System.currentTimeMillis())
                 timerTextView?.text = formatNotchText(state, duration)
 
-                if (state.fatigueScore >= 80) {
-                    startTrembling()
-                } else {
-                    stopTrembling()
-                }
+                updateTrembling()
             }
         }
     }
@@ -381,6 +379,11 @@ class TimerOverlayManager @Inject constructor(
         MascotPose.TIRED -> R.drawable.brain_mascot_tired
         MascotPose.EXHAUSTED -> R.drawable.brain_mascot_exhausted
         MascotPose.DEPLETED -> R.drawable.brain_mascot_depleted
+    }
+
+    /** Trembles only while a short video is playing, so the idle pill never redraws continuously. */
+    private fun updateTrembling() {
+        if (frozenDurationMillis == null && currentFatigueState.fatigueScore >= 80) startTrembling() else stopTrembling()
     }
 
     private fun startTrembling() {
