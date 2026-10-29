@@ -138,6 +138,8 @@ fun BrainMascotCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+            // Translucent containers have no matching content color, so set it explicitly for dark mode.
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
@@ -276,6 +278,7 @@ private fun MetricChip(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
