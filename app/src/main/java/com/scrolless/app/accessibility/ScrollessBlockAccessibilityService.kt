@@ -188,11 +188,17 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Furthest feed position counted in the current session; going back to an earlier reel is not recounted. */
     private var maxCountedReelIndex: Int? = null
 
-    /** Scroll distance collected since the last counted reel, for feeds that report no item index. */
+    /** Scroll distance collected since the last counted reel, for feeds reporting neither an index nor an offset. */
     private var scrollAccumulatedPx: Int = 0
 
-    /** Last absolute scroll offset seen, used where the event carries no scroll delta. */
-    private var lastScrollY: Int = UNSET_SCROLL_Y
+    /** Feed offset at the first scroll of the session; reels are counted as whole pages scrolled past it. */
+    private var feedBaseScrollY: Int? = null
+
+    /** Pages already counted past [feedBaseScrollY]. */
+    private var feedPagesCounted: Int = 0
+
+    /** Last full-screen feed height seen this session, reused when an event has no source. */
+    private var feedPageHeightPx: Int = 0
 
     private val displayHeightPx: Int by lazy { resources.displayMetrics.heightPixels }
 
@@ -585,31 +591,36 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Counts one reel per screenful of vertical scrolling, for feeds that report no item index
-     * (TikTok, TikTok Lite and Likee all send a burst of small scroll events per swipe instead).
-     * Scrolling inside a smaller list, such as a comment sheet, is ignored.
+     * Counts reels for feeds that report no item index (TikTok, TikTok Lite, Likee).
+     *
+     * Android merges scroll events arriving within the notification timeout and keeps only the
+     * last delta, so summing deltas loses most of a swipe. The absolute offset survives the merge,
+     * so reels are counted as whole screens scrolled past where the session started, and
+     * scrolling back is never recounted.
      */
-    private fun hasScrolledOneFeedPage(event: AccessibilityEvent): Boolean {
-        val pageHeight = feedPageHeight(event) ?: return false
-        val delta = scrollDelta(event)
-        if (delta == 0) return false
-
-        scrollAccumulatedPx += abs(delta)
-        if (scrollAccumulatedPx < pageHeight) return false
-        scrollAccumulatedPx -= pageHeight
-        return true
-    }
-
-    /** Prefers the reported scroll delta, falling back to the change in absolute offset. */
-    private fun scrollDelta(event: AccessibilityEvent): Int {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && event.scrollDeltaY != 0) {
-            return event.scrollDeltaY
-        }
+    private fun reelsFromScrollOffset(event: AccessibilityEvent, deltaY: Int): Int {
+        val pageHeight = feedPageHeight(event) ?: return 0
         val scrollY = event.scrollY
-        if (scrollY < 0) return 0
-        val previous = lastScrollY
-        lastScrollY = scrollY
-        return if (previous == UNSET_SCROLL_Y) 0 else scrollY - previous
+        val base = feedBaseScrollY
+        if (scrollY > 0 || (base != null && scrollY >= 0)) {
+            if (base == null) {
+                feedBaseScrollY = scrollY
+                return 0
+            }
+            // A page counts once it is mostly in view, so a swipe that settles slightly short still counts.
+            val pages = (scrollY - base + pageHeight / 5) / pageHeight
+            val newReels = pages - feedPagesCounted
+            if (newReels <= 0) return 0
+            feedPagesCounted = pages
+            return newReels
+        }
+
+        // No offset either: sum the reported deltas as a last resort.
+        if (deltaY == 0) return 0
+        scrollAccumulatedPx += abs(deltaY)
+        if (scrollAccumulatedPx < pageHeight) return 0
+        scrollAccumulatedPx -= pageHeight
+        return 1
     }
 
     /**
@@ -635,17 +646,24 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
     }
 
-    /** Height of the scrolling view, or null when it is too small to be a full-screen feed. */
+    /**
+     * Height of one feed page, or null when the scrolling view is too small to be a full-screen feed
+     * (for example a comment sheet). The last good height is reused when an event has no source.
+     */
     private fun feedPageHeight(event: AccessibilityEvent): Int? {
-        val source = try { event.source } catch (_: Exception) { null }
-        val height = if (source != null) {
-            val bounds = Rect()
-            source.getBoundsInScreen(bounds)
-            bounds.height()
-        } else {
-            displayHeightPx
+        val sourceHeight = try {
+            event.source?.let { node -> Rect().also(node::getBoundsInScreen).height() } ?: 0
+        } catch (_: Exception) {
+            0
         }
-        return height.takeIf { it >= displayHeightPx * MIN_FEED_HEIGHT_PERCENT / 100 }
+        if (sourceHeight > 0) {
+            if (sourceHeight < displayHeightPx * MIN_FEED_HEIGHT_PERCENT / 100) {
+                Timber.v("Ignoring scroll in a %d px view (screen %d px)", sourceHeight, displayHeightPx)
+                return null
+            }
+            feedPageHeightPx = sourceHeight
+        }
+        return feedPageHeightPx.takeIf { it > 0 } ?: displayHeightPx
     }
 
     /**
@@ -672,31 +690,41 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
     }
 
-    /**
-     * Counts a reel when the full-screen feed settles on a position not counted yet.
-     * Pagers report the visible item range; one reel on screen means fromIndex == toIndex,
-     * which also ignores multi-item lists such as comments.
-     */
+    /** Counts reels as the user moves through a short-video feed. */
     private fun onFeedScrolled(event: AccessibilityEvent) {
         val session = contentSession ?: return
         if (event.packageName?.toString() != session.app.packageId) return
 
-        val hasPosition = event.itemCount > 0 && event.fromIndex >= 0
-        if (hasPosition) {
-            if (event.fromIndex != event.toIndex) return
-            val index = event.fromIndex
-            val maxIndex = maxCountedReelIndex
-            maxCountedReelIndex = maxOf(index, maxIndex ?: index)
-            // The first reel was counted on enter; a first event past position 0 means the user already swiped.
-            val isNewReel = if (maxIndex == null) index > 0 else index > maxIndex
-            if (!isNewReel) return
-        } else if (!hasScrolledOneFeedPage(event)) {
-            return
-        }
+        val deltaY = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) event.scrollDeltaY else 0
+        Timber.v(
+            "Feed scroll: index=%d..%d of %d, scrollY=%d, deltaY=%d",
+            event.fromIndex, event.toIndex, event.itemCount, event.scrollY, deltaY,
+        )
 
-        Timber.d("New reel detected (index=%d)", event.fromIndex)
-        brainFatigueRepository.onReelWatched(1)
+        val newReels = if (event.itemCount > 0 && event.fromIndex >= 0) {
+            reelsFromItemIndex(event)
+        } else {
+            reelsFromScrollOffset(event, deltaY)
+        }
+        if (newReels <= 0) return
+
+        Timber.d("New reel detected: +%d (index=%d, scrollY=%d)", newReels, event.fromIndex, event.scrollY)
+        brainFatigueRepository.onReelWatched(newReels)
         timerOverlayManager.notifyReelScrolled()
+    }
+
+    /** One reel on screen means fromIndex == toIndex, which also ignores multi-item lists such as comments. */
+    private fun reelsFromItemIndex(event: AccessibilityEvent): Int {
+        if (event.fromIndex != event.toIndex) return 0
+        val index = event.fromIndex
+        val maxIndex = maxCountedReelIndex
+        maxCountedReelIndex = maxOf(index, maxIndex ?: index)
+        // The first reel was counted on enter; a first event past position 0 means the user already swiped.
+        return when {
+            maxIndex == null -> if (index > 0) 1 else 0
+            index > maxIndex -> index - maxIndex
+            else -> 0
+        }
     }
 
     /**
@@ -709,7 +737,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         maxCountedReelIndex = null
         scrollAccumulatedPx = 0
-        lastScrollY = UNSET_SCROLL_Y
+        feedBaseScrollY = null
+        feedPagesCounted = 0
+        feedPageHeightPx = 0
         brainFatigueRepository.onReelWatched(1)
         timerOverlayManager.notifyReelScrolled()
 
@@ -1039,9 +1069,6 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         /** How often fatigue recovery is applied while the phone is in use. */
         const val RECOVERY_REFRESH_INTERVAL_MS = 30_000L
-
-        /** Sentinel for "no scroll offset seen yet"; 0 is a real offset. */
-        const val UNSET_SCROLL_Y = Int.MIN_VALUE
 
         /** A scrolling view smaller than this share of the screen is a list, not a reel feed. */
         const val MIN_FEED_HEIGHT_PERCENT = 60
