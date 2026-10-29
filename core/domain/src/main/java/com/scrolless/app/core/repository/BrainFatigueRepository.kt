@@ -38,6 +38,11 @@ interface BrainFatigueRepository {
     fun onGeneralScreenTime(durationMs: Long)
 
     /**
+     * Records short-video watch time where individual reels cannot be counted (e.g. in a browser).
+     */
+    fun onShortVideoWatchTime(durationMs: Long)
+
+    /**
      * Evaluates timestamp-based recovery on app open or return to screen.
      */
     fun refreshRecovery()

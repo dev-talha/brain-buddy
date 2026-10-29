@@ -194,6 +194,12 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** General social time not yet converted into fatigue points. */
     private var generalSocialPendingMs: Long = 0L
 
+    /** Social media page open in a browser, or null when the user is not on one. */
+    private var browserSocialKind: BrowserSocialKind? = null
+
+    /** Browser short-video time not yet converted into fatigue points. */
+    private var browserShortPendingMs: Long = 0L
+
     /** Timestamp until which blocking is temporarily paused. */
     @Volatile
     private var pauseUntilMillis: Long = 0L
@@ -398,7 +404,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
      * or narrowly when idle to save battery.
      */
     private fun refreshServiceConfig() {
-        updateServiceConfig(contentSession != null || currentForegroundBrainRotApp != null)
+        updateServiceConfig(contentSession != null || currentForegroundBrainRotApp != null || browserSocialKind != null)
     }
 
     /**
@@ -423,6 +429,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             onFeedScrolled(event)
         }
+
+        updateBrowserSocialState(event)
 
         val scan = contentScanner.scan(
             event.packageName?.toString(),
@@ -527,15 +535,51 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     private fun accrueGeneralSocialTime() {
         val now = SystemClock.elapsedRealtime()
         if (generalSocialMarkMs > 0L) {
-            generalSocialPendingMs += (now - generalSocialMarkMs).coerceIn(0L, MAX_GENERAL_SOCIAL_GAP_MS)
+            val elapsed = (now - generalSocialMarkMs).coerceIn(0L, MAX_GENERAL_SOCIAL_GAP_MS)
+            if (browserSocialKind == BrowserSocialKind.SHORT_VIDEO) {
+                browserShortPendingMs += elapsed
+            } else {
+                generalSocialPendingMs += elapsed
+            }
         }
-        val inGeneralSocial = powerManager.isInteractive && currentForegroundBrainRotApp != null && contentSession == null
+        val inSocialApp = currentForegroundBrainRotApp != null && contentSession == null
+        val inGeneralSocial = powerManager.isInteractive && (inSocialApp || browserSocialKind != null)
         generalSocialMarkMs = if (inGeneralSocial) now else 0L
+
+        if (browserShortPendingMs >= BROWSER_SHORT_VIDEO_MILLIS_PER_POINT) {
+            brainFatigueRepository.onShortVideoWatchTime(browserShortPendingMs)
+            browserShortPendingMs %= BROWSER_SHORT_VIDEO_MILLIS_PER_POINT
+        }
 
         val pointMillis = BrainFatigueCalculator.GENERAL_SCREEN_TIME_MILLIS_PER_POINT
         if (generalSocialPendingMs >= pointMillis) {
             brainFatigueRepository.onGeneralScreenTime(generalSocialPendingMs)
             generalSocialPendingMs %= pointMillis
+        }
+    }
+
+    /**
+     * Tracks social media pages opened in a browser by reading the address bar.
+     * Browsers hide the bar while scrolling, so the last known page is kept until the user leaves the browser.
+     */
+    private fun updateBrowserSocialState(event: AccessibilityEvent) {
+        val eventPackage = event.packageName?.toString()
+        val activeRoot = try { rootInActiveWindow } catch (_: Exception) { null }
+        val activePackage = activeRoot?.packageName?.toString() ?: eventPackage
+        val previous = browserSocialKind
+
+        browserSocialKind = when {
+            activePackage == null || !BrowserSocialDetector.isBrowser(activePackage) -> null
+            eventPackage != activePackage -> previous
+            else -> {
+                val urlBarId = BrowserSocialDetector.urlBarIds.getValue(activePackage)
+                val urlText = activeRoot?.findAccessibilityNodeInfosByViewId(urlBarId)?.firstOrNull()?.text?.toString()
+                if (urlText.isNullOrBlank()) previous else BrowserSocialDetector.classify(urlText)
+            }
+        }
+        if (browserSocialKind != previous) {
+            Timber.d("Browser social page: %s", browserSocialKind)
+            refreshServiceConfig()
         }
     }
 
@@ -837,7 +881,8 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
             // Ensure windows are available for visibility-based exit checks.
             info.flags = info.flags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
         } else {
-            info.packageNames = BlockableApp.entries.flatMap { it.getPackageIds() }.toTypedArray()
+            info.packageNames = (BlockableApp.entries.flatMap { it.getPackageIds() } + BrowserSocialDetector.urlBarIds.keys)
+                .toTypedArray()
             Timber.d("Restricted service configuration to target packages only")
         }
         serviceInfo = info
@@ -862,6 +907,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         /** Longest gap between events counted as general social time; longer gaps are likely idle. */
         const val MAX_GENERAL_SOCIAL_GAP_MS = 2 * 60_000L
+
+        /** Browser short videos cannot be counted one by one: 1 fatigue point per 30 seconds watched. */
+        const val BROWSER_SHORT_VIDEO_MILLIS_PER_POINT = 30_000L
 
         /** Minimum viewing duration required to record usage. Sub-second visits (like immediate blocks) are ignored. */
         const val MIN_TRACKED_DURATION_MILLIS = 1_000L

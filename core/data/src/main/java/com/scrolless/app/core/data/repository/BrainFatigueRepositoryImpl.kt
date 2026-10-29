@@ -148,6 +148,17 @@ class BrainFatigueRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun onShortVideoWatchTime(durationMs: Long) {
+        val current = _fatigueState.value
+        val newFatigue = BrainFatigueCalculator.addWatchTimeFatigue(current.fatigueScore, durationMs)
+        val newState = current.copy(
+            fatigueScore = newFatigue,
+            lastActiveTimestampEpochMs = timeProvider.currentTimeInMillis(),
+        )
+        _fatigueState.value = newState
+        persistState(newState)
+    }
+
     override fun refreshRecovery() {
         val now = timeProvider.currentTimeInMillis()
         val currentEpochDay = timeProvider.localDateNow().toEpochDay()
