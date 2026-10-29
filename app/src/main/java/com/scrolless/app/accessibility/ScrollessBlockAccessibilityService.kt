@@ -335,6 +335,13 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
                 currentTimerOverlayEnabled = it
                 refreshDetectedContent()
                 reconsiderVisibleContent()
+                if (!it) {
+                    timerOverlayManager.dismissImmediately()
+                } else if (contentSession == null) {
+                    // A pill already owned by an active Reel/Short session re-appears on its own
+                    // next update; this covers the idle/general-app cases immediately.
+                    if (currentForegroundBrainRotApp != null) showLiveAppTimer() else showIdlePill()
+                }
             }
         }
 
@@ -660,11 +667,11 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
                 blockedContentOverlayManager.hide()
             }
 
-            // Always show the dynamic notch mascot pill when viewing short videos!
+            // The pill follows the user's "Floating timer" setting; it defaults to on.
             val config = if (timerConfig != null) timerConfig.await() else loadTimerConfig()
             if (config != null) {
                 showTimerOverlayIfEnabled(session, config, dailyUsageMillis)
-            } else {
+            } else if (currentTimerOverlayEnabled) {
                 timerOverlayManager.showDaily(session.startedAtMillis, dailyUsageMillis)
             }
 
@@ -686,6 +693,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
      * writes to daily usage, so the Reels/Shorts-only block limit is unaffected.
      */
     private fun showLiveAppTimer() {
+        if (!currentTimerOverlayEnabled) return
         serviceScope.launch {
             val config = loadTimerConfig()
             val dailyUsageMillis = try {
@@ -709,6 +717,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     /** Keeps the BrainBuddy pill visible outside short videos with today's usage. */
     private fun showIdlePill() {
+        if (!currentTimerOverlayEnabled) {
+            timerOverlayManager.dismissImmediately()
+            return
+        }
         serviceScope.launch {
             val dailyUsageMillis = try {
                 sessionTracker.getDailyUsage()
@@ -734,6 +746,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     /** Shows the timer using the settings and usage already loaded for this viewing session. */
     private fun showTimerOverlayIfEnabled(session: ContentSession, config: BlockingConfig, dailyUsageMillis: Long) {
+        if (!currentTimerOverlayEnabled) {
+            timerOverlayManager.dismissImmediately()
+            return
+        }
         // Reads can finish after navigation. Only show the timer for the same viewing session.
         if (viewingSession !== session) return
 

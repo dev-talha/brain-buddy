@@ -40,8 +40,8 @@
     <string name="settings_material_you_description">Use colours taken from your wallpaper.</string>
     <string name="settings_material_you_note">Turn this off to always use the BrainBuddy palette.</string>
     <string name="settings_material_you_title">Material You</string>
-    <string name="settings_show_onscreen_timer_description">Keep a floating timer visible while watching short-form content.</string>
-    <string name="settings_show_onscreen_timer_title">Show on-screen timer</string>
+    <string name="settings_show_onscreen_timer_description">Keep the floating brain mascot pill on screen with your reel count and time. Turn this off to hide it everywhere.</string>
+    <string name="settings_show_onscreen_timer_title">Show floating brain pill</string>
     <plurals name="settings_pause_duration_value">
         <item quantity="one">%1$d minute</item>
         <item quantity="other">%1$d minutes</item>
