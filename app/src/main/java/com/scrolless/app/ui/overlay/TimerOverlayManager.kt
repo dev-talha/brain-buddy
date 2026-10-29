@@ -166,7 +166,7 @@ class TimerOverlayManager @Inject constructor(
 
         val paddingH = dpToPx(12f)
         val paddingV = dpToPx(6f)
-        val mascotSize = dpToPx(28f)
+        val mascotSize = dpToPx(40f)
 
         mascotImageView = ImageView(serviceContext).apply {
             layoutParams = LinearLayout.LayoutParams(mascotSize, mascotSize).apply {
@@ -179,7 +179,7 @@ class TimerOverlayManager @Inject constructor(
 
         timerTextView = TextView(serviceContext).apply {
             text = formatNotchText(currentFatigueState, displayedDurationAt(System.currentTimeMillis()))
-            textSize = 13f
+            textSize = 14f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER_VERTICAL
