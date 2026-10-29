@@ -247,11 +247,12 @@ enum class BlockableApp(
     ),
     LIKEE(
         packageIds = listOf("video.like", "video.like.lite"),
+        // Verified against Likee on a real device: its video surface ("texture_view") never reaches
+        // the accessibility tree, so detection uses the video detail pager and its root instead.
         detectionMethod = DetectionMethod.AnyOf(
             listOf(
-                DetectionMethod.ViewId("player_view"),
-                DetectionMethod.ViewId("video_view"),
-                DetectionMethod.ViewId("texture_view"),
+                DetectionMethod.ViewId("detail_slide"),
+                DetectionMethod.ViewId("detail_full_root_rl"),
             ),
         ),
         blockAction = ContentBlockAction.PerformGlobalAction(GLOBAL_ACTION_BACK),
