@@ -26,6 +26,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.scrolless.app.BuildConfig
 import com.scrolless.app.core.blocking.BlockingManager
@@ -36,6 +37,7 @@ import com.scrolless.app.core.model.BlockingResult
 import com.scrolless.app.core.model.ContentBlockAction
 import com.scrolless.app.core.model.ResolvedBlockableApp
 import com.scrolless.app.core.repository.BlockingConfigRepository
+import com.scrolless.app.core.domain.fatigue.BrainFatigueCalculator
 import com.scrolless.app.core.repository.BrainFatigueRepository
 import com.scrolless.app.core.repository.SessionTracker
 import com.scrolless.app.core.repository.UserSettingsStore
@@ -185,6 +187,12 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     /** Furthest feed position counted in the current session; going back to an earlier reel is not recounted. */
     private var maxCountedReelIndex: Int? = null
+
+    /** Start of the current stretch in a social app outside short videos, or 0 when not in one. */
+    private var generalSocialMarkMs: Long = 0L
+
+    /** General social time not yet converted into fatigue points. */
+    private var generalSocialPendingMs: Long = 0L
 
     /** Timestamp until which blocking is temporarily paused. */
     @Volatile
@@ -399,6 +407,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
      * @param event The accessibility event emitted by Android.
      */
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        accrueGeneralSocialTime()
         if (!powerManager.isInteractive) {
             handleTrackedAppExit("screen is off while receiving accessibility event")
             return
@@ -509,6 +518,25 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
         contentSession = ContentSession(detectedContent, System.currentTimeMillis())
         onBlockedContentEntered()
+    }
+
+    /**
+     * Adds time spent in a social app outside short videos (feed, normal videos) at the slower fatigue rate.
+     * Events stop while the screen is off or the app is idle, so each gap is capped.
+     */
+    private fun accrueGeneralSocialTime() {
+        val now = SystemClock.elapsedRealtime()
+        if (generalSocialMarkMs > 0L) {
+            generalSocialPendingMs += (now - generalSocialMarkMs).coerceIn(0L, MAX_GENERAL_SOCIAL_GAP_MS)
+        }
+        val inGeneralSocial = powerManager.isInteractive && currentForegroundBrainRotApp != null && contentSession == null
+        generalSocialMarkMs = if (inGeneralSocial) now else 0L
+
+        val pointMillis = BrainFatigueCalculator.GENERAL_SCREEN_TIME_MILLIS_PER_POINT
+        if (generalSocialPendingMs >= pointMillis) {
+            brainFatigueRepository.onGeneralScreenTime(generalSocialPendingMs)
+            generalSocialPendingMs %= pointMillis
+        }
     }
 
     /**
@@ -831,6 +859,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     private companion object {
         /** Default event debounce timeout in ms (matches android:notificationTimeout in accessibility_service_config.xml). */
         const val DEFAULT_NOTIFICATION_TIMEOUT_MS = 250L
+
+        /** Longest gap between events counted as general social time; longer gaps are likely idle. */
+        const val MAX_GENERAL_SOCIAL_GAP_MS = 2 * 60_000L
 
         /** Minimum viewing duration required to record usage. Sub-second visits (like immediate blocks) are ignored. */
         const val MIN_TRACKED_DURATION_MILLIS = 1_000L
